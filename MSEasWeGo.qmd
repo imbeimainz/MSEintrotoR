@@ -1,0 +1,354 @@
+---
+title: "MSE as we go"
+author: "Federico as a student!"
+format: 
+  html:
+    toc: true
+    number-sections: true
+---
+
+# Chapter 1
+
+* I like the console on the right
+* I like to see the full space for the editor!
+
+We have seen how to get some help
+
+```{r}
+help(hist)
+?hist
+
+apropos("hist")
+```
+
+And we have seen that comments can be very useful
+
+```{r}
+## whenever we want to leave some mental notes to others and 
+## to ourselves
+```
+
+While at it, we HAD to do **the classical thing** in any programming language, right?
+
+```{r}
+print("Hello world")
+```
+
+
+
+# Chapter 2
+
+## R is a powerful calculator
+
+
+
+```{r}
+2 + 2
+
+3 * 4
+
+log(2)
+
+7/2
+
+7%/%2
+
+7%%2
+```
+
+
+
+```{r}
+6^7
+
+5 * 10^-12
+
+?sqrt
+
+sqrt(9)
+
+sqrt(c(9,25))
+
+
+ls()
+```
+
+
+## Assigning things
+
+We have different ways to do this
+
+```{r}
+a <- 2
+
+b = 3
+
+4 -> dddd
+
+ls()
+
+```
+
+
+
+
+```{r}
+class(a)
+
+my_first_string <- c("hi", "hello")
+my_first_string
+
+class(my_first_string)
+```
+
+
+## R has functions!!!!
+
+To have fun (ah ah)
+
+```{r}
+paste("Hello", "Lara")
+
+paste("Hello", "Lara", sep = "")
+
+1:10
+
+paste("Variable", 1:10)
+paste("Variable", 1:10, ";hello Lara again")
+paste("Variable",c(1:10)*3,";hello Lara again")
+
+## if I want to put together variable, numbers from  1 to 10 multiplied by three, and greet our Lara again
+paste("Variable", 
+      (c(1:10) * 3), 
+      ";hello Lara again")
+
+Sys.getenv("USER")
+```
+
+
+```{r}
+2+2
+2 + 2
+```
+
+
+## Errors, messages, warning
+
+```{r}
+warning("I need to be careful")
+
+message("all is fine, but I might be telling you something useful")
+```
+
+
+
+## Packages
+
+
+```{r}
+#| eval: false
+## two in one go!!!
+
+install.packages(c("dplyr", "tidyr"))
+
+install.packages("BiocManager")
+
+BiocManager::install("iSEE")
+```
+
+
+
+Everytime you need it
+
+```{r}
+library("dplyr")
+
+dplyr::filter
+stats::filter
+
+?filter
+```
+
+
+
+# Chapter 3
+
+
+Penguins (and more)!!!!
+
+```{r}
+#| eval: false
+
+install.packages(
+  c(
+    "readxl", 
+    "readr",
+    "janitor",
+    "dplyr",
+    "tidyr",
+    "writexl",
+    "haven",
+    "ggplot2",
+    "ggforce"
+  )
+)
+
+```
+
+
+
+```{r}
+library("readxl")
+library("readr")
+library("janitor")
+library("dplyr")
+library("tidyr")
+library("writexl")
+library("haven")
+library("ggplot2")
+library("ggforce")
+```
+
+
+## Data I/O
+
+
+
+## At last, those damn penguins
+
+```{r}
+?penguins
+?penguins_raw
+
+penguins
+
+View(penguins)
+
+
+head(penguins_raw)
+```
+
+```{r}
+getwd()
+list.files()
+```
+
+
+## Processing and inspecting
+
+```{r}
+head(penguins)
+
+tail(penguins)
+
+dim(penguins)
+
+nrow(penguins)
+ncol(penguins)
+
+names(penguins)
+rownames(penguins)
+
+summary(penguins)
+
+dplyr::glimpse(penguins)
+```
+
+## Subsetting!
+
+```{r}
+penguins$species
+
+penguins[,1]
+```
+
+
+working with the penguins!!
+
+```{r}
+table(penguins$species)
+table(penguins$species, penguins$island)
+table(penguins$species, penguins$island, penguins$sex)
+
+unique(penguins$island)
+levels(penguins$island)
+
+levels(penguins$sex)
+
+is.na(penguins)
+
+knitr::kable(penguins)
+```
+
+```{r}
+head(penguins_raw)
+head(penguins)
+
+penguins |> dim()
+```
+
+```{r}
+dirty_penguins <- penguins_raw
+
+dirty_penguins$`Body Mass (g)`[42] <- -999 
+dirty_penguins$Sex[6] <- "MALE "
+dirty_penguins$Comments[4] <- ""
+
+saveRDS(dirty_penguins, "datasets/dirty_penguins.RDS")
+
+dplyr::glimpse(dirty_penguins)
+summary(dirty_penguins)
+
+unique(dirty_penguins$Sex)
+```
+
+
+back to raw penguins!
+
+```{r}
+penguins_raw$Sex
+penguins_raw$Species
+
+penguins$species
+
+penguins_raw$`Sample Number`
+
+colnames(penguins)
+
+colnames(penguins_raw)
+
+clean_names(penguins_raw) |> names()
+names(penguins_raw)
+names(penguins)
+```
+
+
+
+# The gran finale
+
+```{r}
+sessionInfo()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
