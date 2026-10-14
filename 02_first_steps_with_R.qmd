@@ -1,0 +1,300 @@
+---
+title: >
+  Introduction to R - First steps with R
+subtitle: >
+  MSE Core Module 1.1
+author:
+- name: Federico Marini
+  affiliation: 
+  - Institute of Medical Biostatistics, Epidemiology and Informatics (IMBEI), Mainz, Germany
+  email: marinif@uni-mainz.de
+  orcid: 0000-0003-3252-7758 # edit as needed
+## add here more authors if needed - and do add the affiliation(s)
+date: "2026-10-14"
+date-format: long
+format: 
+  revealjs:
+    theme: 
+    - default
+    - ummz_reveal_theme.scss
+    embed-resources: true
+    mainfont: "Atkinson Hyperlegible"
+    # mainfont: "IBM Plex Sans"
+    ## making links automatically open in a new window 
+    link-external-newwindow: true
+    incremental: false
+    # incremental: true
+    footer: "MSE CM 1.1 - Introduction to R"
+    slide-number: c/t
+    smaller: true
+execute:
+  echo: true
+---
+
+# Previously on these screens
+
+* R
+* RStudio as IDE
+* Documentation
+* Good practices in a project
+* Quarto framework
+
+# First steps with R
+
+## R is a powerful calculator
+
+... but not just that.
+
+::: {.fragment}
+Type the following
+
+```{r}
+#| eval: false
+2 + 2
+log(2)
+347 * 73841
+7/2
+7%/%2
+7%%2
+```
+
+and see what happens
+:::
+
+::: {.fragment}
+```{r}
+#| eval: false
+6^7
+42 * 10^-42
+sqrt(10000)
+```
+:::
+
+## R has a workspace
+
+... and that can contain (any) object.
+
+You can see what is in the workspace anytime (Environment pane)
+
+You can also use the `ls()` function, try that out
+
+## Objects, and assignments
+
+What is an object?
+
+::: {.fragment}
+Well, anything.
+
+To create an object we need the assignment operator
+:::
+
+::: {.fragment}
+Typically: `<-`
+
+Also possible, but not recommended: `=`
+
+Also possible, recommended in some cases: `->`
+
+Historically, the underscore was also used for the assignment!
+
+```{r}
+a <- 1
+```
+:::
+
+## R has data types
+
+::: {.fragment}
+* **Character**: letters, words, numbers, signs, everything is a string
+* **Numeric**: numbers, as values
+* **Logical**: `TRUE` or `FALSE`
+* **Factors**: can be used for categorical variables - more on this later
+:::
+
+## R has also data structures
+
+::: {.fragment}
+* **Vector**: a collection of entries of the same type
+* **Matrix**: a two-dimensional vector (all data entries of the same type)
+* **Array**: a multi-dimensional matrix
+* **List**: a vector, but this can contain different data types (a number, a plot object)
+* **Data frame**: "the classical table". Like a matrix, but without the requirement of "all columns of the same type"
+:::
+
+## R has of course also functions
+
+::: {.fragment}
+Anything that is basically called upon the objects.
+:::
+
+::: {.fragment}
+Put the `fun` in the `function` (ah ah)
+
+Often times looks like `this_function()`, and is called a la `this_function(this_object)`
+:::
+
+## R is sometimes permissive
+
+These are the same
+
+```
+2+2
+2 + 2
+
+3*(2+1)
+3 * (2 + 1)
+
+a<-"thisthing"
+a <- "thisthing"
+```
+
+::: {.fragment}
+What is better? Why?
+:::
+
+::: {.fragment}
+Let the code breath, let the reader think of|read|enjoy what you wrote
+
+Hit that Enter key every now and then!
+
+Use the support provided by the IDE for the indentation & co
+:::
+
+## R is also strict
+
+::: {.fragment}
+- R is case sensitive and has zero-tolerance with mis-spelled names
+- Parenthesis: open *and* close them
+- Special attention with missing values, factors VS strings: R is clever, but you might think differently
+
+(Sometimes the behavior might end up being unexpected - and sometimes this is not even an error)
+:::
+
+<!-- example here of vector recycling? -->
+
+::: {.fragment}
+In general:
+
+- Do not be stingy with parentheses - if this helps you
+- Same goes with comments - your colleagues and your future self will thank you
+:::
+
+## Errors, warnings, messages
+
+Three type of information coming from the console
+
+**Errors**: Something went wrong, execution stops
+
+**Warnings**: Something does not smell too right, calls for some inspection
+
+**Messages**: Potentially harmless, potentially very useful. Read them
+
+
+::: {.fragment}
+Who decides the level of "alert"?
+
+Let's trigger some of these messages!
+
+How do you decide what to do when such things happen? Check code, documentation, objects, "use the source Luke" if the Jedi level allows it...
+:::
+
+## Coding with style
+
+General tips:
+
+* Write clean code - use spaces, indentation
+* Use an editor with syntax highlighting/some form of autocompletion 
+
+::: {.fragment}
+Adhere to some coding style rules - often the Google style is well received
+
+The `styler` package can do very good things at zero-effort cost!
+:::
+
+# R packages
+
+## What are packages?
+
+::: {.fragment}
+R packages…
+
+* Are fundamental components of R ecosystem
+* Extend base R functionality for a specific purpose
+* Bundle new functions, data sets, and documentation
+* Are contributed by independent developers (it could be you!)
+* Have a dependency management to install "everything that is needed"
+:::
+
+::: {.fragment}
+Guaranteed to work?
+:::
+
+## Where can I find packages?
+
+Repositories:
+
+* CRAN: Managed official package repository network
+* Bioconductor: curated bioinformatics packages (vignettes mandatory, integrated ecosystem!)
+* GitHub: un-managed, bleeding edge
+
+::: {.fragment}
+What should I trust?
+:::
+
+::: {.fragment}
+My contributions so far:
+
+    flowcatchR http://bioconductor.org/packages/flowcatchR/
+    pcaExplorer http://bioconductor.org/packages/pcaExplorer/
+    ideal http://bioconductor.org/packages/ideal/
+    GeneTonic http://bioconductor.org/packages/GeneTonic/
+    iSEE http://bioconductor.org/packages/iSEE/
+    mosdef http://bioconductor.org/packages/mosdef/
+    GeDi http://bioconductor.org/packages/GeDi/
+    DeeDeeExperiment http://bioconductor.org/packages/DeeDeeExperiment/
+    bettr http://bioconductor.org/packages/bettr/
+    ...
+    haR - A Palette Generator Inspired by Haribo Gummy Candies (https://github.com/federicomarini/haR)
+:::
+
+## How to use packages
+
+* **Install**: once (for every major R version)
+* **Load**: in each session
+* **Use** like any base R functionality, calling the `new_function()` - works also like `pkg::fun()` (it is sometimes good to be explicit)
+
+::: {.fragment}
+Relevant commands:
+
+* `install.packages("packagename")` - check it online at CRAN!
+* `installed.packages()` (and know what is the `.libPaths()`)
+* `update.packages()`
+* `library("packagename")`
+* `help(package="packagename")`, `data()`, `browseVignettes()`, `vignette()`, `citation("packagename")`
+
+If on Bioconductor: `BiocManager::install()`
+:::
+
+## So I do not have to write any function from the scratch?
+
+::: {.fragment}
+Possibly.
+
+Well, it depends.
+:::
+
+::: {.fragment}
+Using other packages' code vs Depending on these functions
+
+There might be a fine line, and it might be that you can see that show up in the next future
+:::
+
+# What comes next?
+
+We will be working with data (finally...)!
+
+::: {.fragment}
+**Questions** on this, first?
+
+**Thank you for your attention!**
+:::

@@ -1,0 +1,448 @@
+---
+title: >
+  Introduction to R - Background
+subtitle: >
+  MSE Core Module 1.1
+author:
+- name: Federico Marini
+  affiliation: 
+  - Institute of Medical Biostatistics, Epidemiology and Informatics (IMBEI), Mainz, Germany
+  email: marinif@uni-mainz.de
+  orcid: 0000-0003-3252-7758 # edit as needed
+## add here more authors if needed - and do add the affiliation(s)
+date: "2026-10-14"
+date-format: long
+format: 
+  revealjs:
+    theme: 
+    - default
+    - ummz_reveal_theme.scss
+    embed-resources: true
+    mainfont: "Atkinson Hyperlegible"
+    # mainfont: "IBM Plex Sans"
+    ## making links automatically open in a new window 
+    link-external-newwindow: true
+    incremental: false
+    # incremental: true
+    footer: "MSE CM 1.1 - Introduction to R"
+    slide-number: c/t
+    smaller: true
+execute:
+  echo: true
+---
+
+# Some general info
+
+## What's on the menu
+
+* R and statistical programming
+* First steps in R
+* Working with data (real data)
+* Some specific data types
+* Data visualization 101
+
+::: {.fragment}
+Other topics desired? We might revisit this at the end
+:::
+
+<!-- take some notes on what they want as extra -->
+
+
+## `Sys.getenv("USER")`
+
+
+Hi there!  
+I am Federico, Bioinformatician, in a healthy, open relationship with R as a programming language
+
+I learned this the hard way, if you want to say 
+
+I used R a lot, many of its packages, and ended up developing a couple
+
+Contact email: marinif@uni-mainz.de - or knock that door
+
+## Who R you?
+
+Two-three lines on who you are and what your experience with R as a programming language are, and what you would like to learn!
+
+::: {.fragment}
+I will start...
+:::
+
+## Learning goals
+
+* Get familiar with R and an IDE (RStudio)
+* Be comfortable in using R and its ecosystem
+* Learn to work in a reproducible manner
+* Gain experience in how to "do epidemiology" with R
+* Learn the basics of data visualization
+* Get to know how to "think project" and drive a project with R 
+
+## How are we going to get there?
+
+* You'll get your hands dirty
+* I’ll live code with you
+* We will follow the Ampelmann - grab some mini-stickers!
+* Lavish prizes and amusement possibilities
+* Optional assignments as a take home present to go more in-depth
+
+::: {.fragment}
+I want you to understand the basics of R; get data in and data out; describe, explore, transform, summarise data; plot data; as a bonus, doing this in a reproducible manner
+
+Do ask questions! And also, I want you to talk to each other. Have/find a buddy, learning together is just much better.
+:::
+
+## A note on our AI policy on this
+
+Enjoy the trip, use the HI.
+
+You will be given the time to learn ("the hard way"), use that time. 
+
+Shortcuts are there - try not taking them
+
+Evidence on more persisting learning - "LLMs are an exponent"
+
+::: {.fragment}
+### Questions?
+:::
+
+# Basics of R
+
+## What is R? Why should I use R?
+
+Available at www.r-project.org
+
+* Free statistical environment for interactive use
+* Interpreted, functional scripting/programming language - you type in, you see output
+* Descends from the S language, written by statisticians for statisticians
+
+## What can you do with R?
+
+::: {.fragment}
+Anything!
+:::
+
+::: {.fragment}
+* Do calculations
+* Write functions
+* Analyse data. ALL the data. Well, almost. But really, almost.
+* Apply advanced statistical techniques
+* Do beautiful & publication-ready plots
+* Develop interactive web-applications
+* Presentations & documents (this one)
+:::
+
+## Why should I use R?
+
+::: {.fragment}
+* It works! And it is quite powerful
+* It is free, open-source, and available for all OS
+* You can really do whatever you might aim to do in terms of statistics
+* It offers awesome possibilities for (interactive) graphing
+* It has a wide, active and competent community (ok, communities: statistics, bioinformatics, machine learning, …)
+* It can be extended with packages. More power!
+* Escape Point-and-Click-land, you work with syntax: you can use, re-use elements, validate & reproduce analysis
+:::
+
+## Why should I not use R?
+
+::: {.fragment}
+* You use it or lose it
+* The learning curve might be steep
+* Can be frustrating if you have errors
+* Help might be available, but it is sometimes very technical
+* Many packages, a blessing and a curse: how, how good
+:::
+
+# Using R within an IDE
+
+## Get R - and RStudio
+
+::: {.fragment}
+* Go to https://www.r-project.org/ and get the latest version
+* Go to https://posit.co/products/open-source/rstudio and download RStudio
+:::
+
+::: {.fragment}
+Alternatives:
+
+* Positron (https://positron.posit.co/download.html)
+* Microsoft VS Code (https://code.visualstudio.com/)
+* OpenAnalytics Architect (https://www.getarchitect.io/)
+:::
+
+## First ride: look around you
+
+::: {.fragment}
+You'll have…
+
+* The Console (command prompt)
+* The Source Editor (write your code here - and then run it)
+* The Environment (an overview of the created objects)
+* The History (your previous commands)
+* Files browser
+* Plots viewer
+* Help viewer
+* Data viewer
+* Package viewer
+* Your Working Directory for the R session
+:::
+
+## A good IDE will give you...
+
+* Ways to open/load/save files
+* The possibility to run commands from the editor
+* A good syntax highlighting
+* Suggested completions (for functions, arguments, objects, ...) - TAB is your friend
+* Some diagnostics on your code
+
+## Do these things now, thank me later
+
+* Global options - start always from the scratch!
+  - Do not restore .Rdata at startup
+  - Never save workspace on exit
+  
+* Use the maximum real estate space for your code/editor
+  - Put the console on the right + maximize the editor
+
+* Have a theme that could be gentle on your eyes (Solarized light, but you do you) - this can also help you for the syntax highlighting
+
+* Work as a project - .Rproj files are your friend
+
+* Spend some time having a look at the menus above. They contain an amazing/awful lot of things and useful functions
+
+* Get some familiarity with keyboard shortcuts!
+
+# R documentation
+
+## `r emo::ji("notes")` Help! `r emo::ji("notes")`
+
+```{r}
+#| eval: false
+## this calls the help for a function to plot a histogram
+?hist
+# this is just the same
+help(hist) ## what about ??
+```
+
+::: {.fragment}
+Check out what these do
+
+```{r}
+#| eval: false
+?apropos
+apropos("row")
+??row
+```
+:::
+
+## Where do I look for help?
+
+- Integrated help system, with executable examples
+- (for some packages) Vignettes (typical problem, commands, and workflow)
+- CRAN Task Views: https://cran.r-project.org/web/views/
+- Books! (I will put together an opinionated list at the end...)
+- Courses!
+- Online: mailing lists, forums (StackOverflow, ...), blogs, Twitter (`#rstats`)
+- LLMs - use them with judgement!!!
+
+
+## Make your life easier - Take notes for your future self
+
+::: {.fragment}
+- Add comments and document your own code
+
+```{r}
+# This is a comment
+```
+
+- write clean code - use spaces, indentation
+- use an editor with syntax highlighting/some form of autocompletion 
+:::
+
+::: {.fragment}
+Careful here:
+
+- R is case sensitive and has zero-tolerance with mis-spelled names
+- Parentheses: open *and* close them
+- Special attention with missing values, factors VS strings: R is clever, but you might think differently
+- Do not be stingy with parentheses - if this helps you
+- Same goes with comments - your colleagues and your future self will thank you
+:::
+
+# A project, in/with R
+
+## What's a good project?
+
+Goes a bit with the Anna Karenina principle...
+
+::: {.fragment}
+Some foundations:
+
+* Use RStudio projects, "think project-wise": imagine to carry along the (relevant part of the) universe with you
+* Think of a useful folder structure for your future data and programs (literally, any. Any that works for you)
+* Use names that are representative of their function - and be consistent
+* Leave your mental breadcrumbs in - use comments, put them up on top
+:::
+
+## Useful folder structure
+
+::: {.fragment}
+* It helps to navigate even complex projects
+* You quickly grasp the purpose of your older programs 
+* You have colleagues, friends, reviewers: Help others to navigate your work!
+:::
+
+::: {.fragment}
+The work you invest now WILL overall reduce your required work in the long run, pinky swear!
+
+Have main folders, create separate sub-folders for Data, Documents, generated figures...
+:::
+
+## Naming things
+
+... is a lost art. Do master that art. 
+
+Don't call your data `mydata`.
+
+Possibly: don't use spaces in the names, use underscores or dashes
+
+::: {.fragment}
+A good example:
+
+`[Project name]_[Optional number]_[Short descriptive name]_[Version].[extension]`
+
+Why is this good?
+
+Keep it simple for now
+
+`[Lecture name]_[Exercise name or description].[extension]`
+:::
+
+## Use comments/text
+
+... to leave essential infos in
+
+Feel free and invited to do at the top of the files
+
+An informative header should be the start of every file you use (we will see soon how this can work out)
+
+Who's going to love this? 
+<!-- Your colleagues, but especially your future self -->
+
+
+# A shocking revelation - I don't use scripts
+
+... and neither should you ^[Ok, with some exceptions, of course...]
+
+<img src=https://i.imgflip.com/22u565.jpg alt="">
+
+
+## Who knows RMarkdown?
+
+::: {.fragment}
+R Markdown allows you to create documents that serve as a neat record of your analysis. 
+
+Why?
+
+- We want other researchers to easily understand what we did in our analysis, otherwise nobody can be certain that you analysed your data properly (yay, reproducible research!)
+- Create an R markdown document as an appendix to a paper or project assignment, upload it to an online repository such as Github, or simply to keep as a personal record (*future you* will thank *present you* for this)
+:::
+
+::: {.fragment}
+The key point is...
+
+R Markdown documents present your code alongside its output (graphs, tables, etc.) with conventional text to explain it, a bit like a notebook. To do this, R Markdown uses **markdown** syntax (that's the thing that is also used by LLMs when rendering the conversation, in case you ever copy-pasted from these...). 
+:::
+
+## Now there is Quarto!
+
+https://quarto.org/
+
+Quarto is a multi-language, next generation version of R Markdown (also from Posit), with many new features and capabilities
+
+::: {.fragment}
+The price to pay on top to have an Rmd/qmd document is sooooo small - and for that, you get
+
+- Code, text, output all together
+- One file only - no need to get lost among many output items
+- It even looks nice
+- It can be rendered to many formats
+
+If you have installed a recent enough version of RStudio, you might be all set already!
+:::
+
+## Let's create one Quarto document together!
+
+... and use it throughout this WHOLE COURSE.
+
+::: {.fragment}
+To create a new Quarto file (`.qmd`), select `File -> New File -> Quarto document...` in RStudio
+
+The newly created `.qmd` file comes with basic instructions 
+:::
+
+::: {.fragment}
+The different parts of it:
+
+- An (optional) YAML header surrounded by `---`s
+- R code chunks surrounded by backticks (```)
+- text mixed with simple text formatting
+
+Let's insert text and code - any text, any code
+:::
+
+## Code comes in chunks
+
+... and chunks have options to control the behavior/the output of each
+
+Detailed very nicely here: https://quarto.org/docs/computations/r.html#code-blocks
+
+::: {.fragment}
+Some useful ones: 
+
+* `label`
+* `echo`
+* `eval`
+* `results`
+* `fig.height` & co
+:::
+
+## Rendering a document
+
+When a Quarto document is rendered, ALL R code blocks are automatically executed (top to bottom). 
+
+You can render Quarto documents e.g. using the Render button
+
+::: {.fragment}
+Can you find out how to generate a word document as output?
+
+I want us all to "learn that as a habit".
+:::
+
+## Let's create THE document that will accompany through this course
+
+::: {.fragment}
+Give it a meaningful name
+:::
+
+::: {.fragment}
+Start entering some content
+:::
+
+::: {.fragment}
+Render it (it should become a ritual)
+:::
+
+::: {.fragment}
+Rinse and repeat
+:::
+
+# What comes next?
+
+Our first steps with R, yay!
+
+::: {.fragment}
+**Questions** on this, first?
+
+**Thank you for your attention!**
+:::

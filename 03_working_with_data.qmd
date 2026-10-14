@@ -1,0 +1,604 @@
+---
+title: >
+  Introduction to R - Working with data
+subtitle: >
+  MSE Core Module 1.1
+author:
+- name: Federico Marini
+  affiliation: 
+  - Institute of Medical Biostatistics, Epidemiology and Informatics (IMBEI), Mainz, Germany
+  email: marinif@uni-mainz.de
+  orcid: 0000-0003-3252-7758 # edit as needed
+## add here more authors if needed - and do add the affiliation(s)
+date: "2026-10-14"
+date-format: long
+format: 
+  revealjs:
+    theme: 
+    - default
+    - ummz_reveal_theme.scss
+    embed-resources: true
+    mainfont: "Atkinson Hyperlegible"
+    # mainfont: "IBM Plex Sans"
+    ## making links automatically open in a new window 
+    link-external-newwindow: true
+    incremental: false
+    # incremental: true
+    footer: "MSE CM 1.1 - Introduction to R"
+    slide-number: c/t
+    smaller: true
+execute:
+  echo: true
+---
+
+# Previously on these screens
+
+* R basics
+* R has packages
+* R can be kind & strict - mostly up to you
+
+# I/O
+
+## Required packages
+
+We are going to need these packages
+
+```{r}
+library("readxl")
+library("readr")
+library("janitor")
+library("dplyr")
+library("tidyr")
+library("writexl")
+library("haven")
+library("ggplot2")
+library("ggforce")
+```
+
+How do we get them installed? (Tip, you can do more than one in a single command!)
+
+## Data in, data out
+
+::: {.fragment}
+How do you normally assemble your data?
+:::
+
+::: {.fragment}
+How do you normally receive your data?
+:::
+
+::: {.fragment}
+How does your data normally look like?
+:::
+
+::: {.fragment}
+Is that a (perfect) rectangle? Then we can (possibly) be already a bit happy!
+
+So far we have worked with objects that we have assigned on the fly
+:::
+
+::: {.fragment}
+Your job in a nutshell: Data in - do something - data/results/plots/insight out, rinse & repeat
+:::
+
+## Creating data
+
+Going by hand is perfectly fine, till it becomes boring/tiring/error prone
+
+::: {.fragment}
+R comes with datasets - many of them!
+
+We will use `penguins` as an example, and not just because they are a cool animal
+
+... and we are going to go `raw` on them ^_^
+:::
+
+::: {.fragment}
+Can we get some information on this dataset? (Datasets are also documented!)
+
+Remember we had different types of data, what is this one?
+
+How can we really see this dataset? Can we `View()` that?
+:::
+
+## Going by hand
+
+This is possibly a "friends don't let friends" kind of thing
+
+Still, let's see where this takes us:
+
+```{r}
+#| error: true
+#| eval: false
+#| output: false
+
+head(penguins_raw)
+pen_id <- c(1, 2, 3, 4, 5, 6)
+pen_species <- c("Adelie", "Adelie", "Adelie", "Adelie")
+
+diy_penguins <- data.frame(
+  id = pen_id,
+  species = pen_species
+)
+cbind(pen_id, pen_species)
+
+pen_species <- rep("Adelie", 6)
+diy_penguins <- data.frame(
+  id = pen_id,
+  species = pen_species
+)
+diy_penguins
+cbind(pen_id, pen_species)
+```
+
+# I/O: Data in
+
+## Data in
+
+Data can come in different formats (and shapes, possibly):
+
+::: {.fragment}
+- Your files, the clipboard, a URL
+- Plain text file: Comma-separated, tab-delimited, ...
+- R format file
+- SAS/Stata/SPSS file (there's the CRAN package `haven`)
+- Spreadsheet (Excel) - package `readxl` is highly recommended!
+- Database: RSQLite, RPostgreSQL, RMySQL, ...
+:::
+
+::: {.fragment}
+Colleagues might even provide data to you as a/within a package (I did that a long time ago -  see https://github.com/federicomarini/rbioc2016 for an example)
+
+R is a language, we need to learn the words that do things. 
+:::
+
+## The vocabulary of importing
+
+... and exporting
+
+- `read.table()`,`write.table()` + `read.csv()`, `read.delim()`
+- `load()`,`save()`/`readRDS()`,`saveRDS()`
+- via `haven` : `read_sas()`,`read_spss()` /`write_sas()`,`write_sav()`
+- via `readxl`: `read_excel()`
+
+::: {.fragment}
+Check out their documentation pages!
+
+Other options: `vroom::vroom()`, the RStudio GUI, ...
+
+Who has seen the option `stringsAsFactors=FALSE`?
+:::
+
+# On pain, paths, files, and projects
+
+## Where is R right now?
+
+```{r}
+#| eval: false
+getwd()
+list.files()
+```
+
+::: {.fragment}
+- R always works **from one folder**: the *working directory*
+- Every file you name is looked for **relative to that folder**
+- Check the **Files pane**: it shows the same folder
+:::
+
+## Absolute vs. relative paths
+
+```{r}
+#| eval: false
+# absolute: works on ONE computer only
+read_csv("C:/Users/maria/Desktop/course/datasets/nhanes.csv")
+
+# relative: works on ANY computer that has the same project
+read_csv("datasets/nhanes.csv")
+```
+
+::: {.fragment}
+An absolute path in your code means nobody else can run it, and neither can *future you* on a new laptop.
+
+Use RStudio projects -> Opening the project **sets the working directory to that folder**, and everything lives together: `.qmd`, `datasets/`, outputs
+
+Rule/suggestion: one project per analysis, and refer to files relative to it
+:::
+
+::: {.fragment}
+### Typical path errors
+
+* `cannot open file ... No such file` --> typo, wrong folder, or project not opened 
+* `'C:\Users\...' contains an unrecognized escape` --> Windows backslashes: use `/` 
+:::
+
+## Quarto and the working directory
+
+Works in the console, fails on render?
+
+When you **render** a `.qmd`, the working directory is **the folder of the document**.
+
+::: {.fragment}
+Keep the `.qmd` in the project root, and relative paths just work
+
+My heartfelt tip: Never-ever-ever  use `setwd()` in a document. It hard-codes your machine into the analysis.
+:::
+
+# Data processing
+
+## Inspecting data
+
+What can we use for this?
+
+::: {.fragment}
+* `head()` and `tail()`
+* `dim()`
+* `nrow()` and `ncol()`
+* `length()`
+* `names()`, `colnames()`, `rownames()`
+:::
+
+::: {.fragment}
+* `help()` - `?`
+* `View()`
+* `summary()`
+* `str()`
+* `class()`
+* `dplyr::glimpse()`
+:::
+
+
+## Working with a vector
+
+```{r}
+my_first_vec <- c(6, 1, 3, 6, 10, 5)
+```
+
+::: {.fragment}
+What happens if you do this?
+
+```{r}
+#| eval: false
+
+my_first_vec[2]
+my_first_vec[c(5, 6)]
+my_first_vec[-c(5,6)]
+my_first_vec > 5
+my_first_vec[my_first_vec > 5]
+```
+:::
+
+## How to access what is in a data frame?
+
+Slicing and dicing, the basic way - most rectangular datasets can be dealt with...
+
+```{r eval=FALSE}
+dataset[ROWS, COLUMNS]
+```
+
+You can subset with...
+
+::: {.fragment}
+- integers
+- blank spaces
+- names
+- logical vectors
+:::
+
+::: {.fragment}
+Sometimes you could think it's all about the money (`$`)
+:::
+
+## A quick musical intermezzo
+
+What happens if you do this?
+
+```{r}
+beat_df <- data.frame(
+  name = c("John", "Paul", "George", "Ringo"),
+  birth = c(1940, 1942, 1943, 1940),
+  instrument = c("guitar", "bass", "guitar", "drums")
+)
+
+beat_df
+## or
+beat_df <- readxl::read_xlsx("datasets/beatles.xlsx")
+```
+
+::: {.fragment}
+```{r}
+#| eval: false
+beat_df[c(2, 4), 3]
+beat_df[ , 1]
+beat_df[ , "instrument"]
+beat_df$instrument
+```
+:::
+
+
+
+# The first dive with penguins
+
+## Back to the penguins
+
+Some more functions that could come handy or one or more columns
+
+::: {.fragment}
+* `table()`
+* `unique()`
+* `levels()` and `relevel()`
+* `is.na()`
+* `sum()`
+* `knitr::kable()`
+* `ggplot2::ggplot()` 
+* `summary()` again
+* `identical()`, `all.equal()`
+:::
+
+::: {.fragment}
+Want to propose some examples of the things we can do right away?
+:::
+
+## Let's do some real work on those penguins
+
+```{r}
+#| results: hide
+
+head(penguins_raw)
+dim(penguins_raw)
+
+head(penguins)
+dim(penguins)
+```
+
+## Ceci n'est pas une pipe
+
+::: {.fragment}
+Meet the native R pipe `|>` 
+
+```{r}
+penguins |> dim()
+# is the same as
+dim(penguins)
+```
+:::
+
+::: {.fragment}
+This has a comfortable shortcut (find it out in RStudio!)
+:::
+
+## Time to clean up!
+
+::: {.fragment}
+... because I made them dirty for you!
+
+```{r}
+#| echo: false
+#| eval: false
+
+dirty_penguins <- penguins_raw
+
+dirty_penguins$`Body Mass (g)`[42] <- -999 
+dirty_penguins$Sex[6] <- "MALE "
+dirty_penguins$Comments[4] <- ""
+
+saveRDS(dirty_penguins, "datasets/dirty_penguins.RDS")
+```
+:::
+
+<!-- here: read things in, show the path -->
+
+::: {.fragment}
+Read that in and assess/check/find out what happened
+
+* How big is this dataset, what types are in?
+* What do the values look like?
+* Which columns are constant (possibly "useless")?
+* How much is missing, and where?	 <!-- colSums(is.na(penguins_raw)) -->
+* Are there impossible values?	<!-- range(), a quick filter() -->
+:::
+
+## Grooming them well
+
+Let's return back to the `penguins_raw`
+
+::: {.fragment}
+```{r}
+#| results: false
+my_penguins <- penguins_raw
+
+my_penguins$`Sample Number`
+my_penguins$Sex
+my_penguins$Species
+```
+:::
+
+::: {.fragment}
+Everything (well, almost) is a character!
+
+Which ones of these should NOT be text
+:::
+
+::: {.fragment}
+* Sample number is a number - but it is not
+* Sex and Species are actually categories - factors come into play
+* Date Egg is a date - and you might encounter them often in epidemiological datasets
+:::
+
+## Grooming - Round 2
+
+Column names have those nasty spaces...
+
+::: {.fragment}
+```{r}
+#| results: false
+library("janitor")
+my_penguins <- my_penguins |> clean_names()
+
+colnames(penguins_raw)
+colnames(my_penguins)
+```
+:::
+
+::: {.fragment}
+Can you also make the `species` information more compact?
+
+How can we drop the comments?
+:::
+
+::: {.fragment}
+```{r}
+my_penguins <- my_penguins[, -17]
+my_penguins$comments <- NULL
+```
+:::
+
+## Transforming penguins
+
+Let's work on the body mass
+
+* Make it in kilograms
+* Compute a Z score out of it (challenge: do it by hand!)
+  * How can you check if this is somehow normally distributed?
+* Categorize that in some classes
+
+::: {.fragment}
+```{r}
+#| results: false
+#| fig-show: hide
+my_penguins$mass_kg <- my_penguins$body_mass_g / 1000
+
+hist(my_penguins$body_mass_g, breaks = 20)
+
+my_penguins$z_mass <- as.numeric(scale(my_penguins$body_mass_g))
+hist(my_penguins$z_mass, breaks = 20)
+
+my_penguins$mass_class <- cut(my_penguins$body_mass_g, breaks = 4)
+```
+:::
+
+::: {.fragment}
+What if you want to specify those limits by hand? 
+<!-- assist to use mutate -->
+:::
+
+## Transforming penguins, with `dplyr`
+
+::: {.fragment}
+```{r}
+library("dplyr")
+my_penguins$body_mass_g |> summary()
+
+my_penguins |> 
+  mutate(mc2 = case_when(
+    body_mass_g < 3500 ~ "light",
+    body_mass_g < 4500 ~ "medium",
+    .default = "heavy")
+  ) -> my_penguins
+
+table(my_penguins$mc2)
+```
+:::
+
+::: {.fragment}
+Notice here the "right hand assignment" & the order of the classes - what "should be done on top"?
+:::
+
+# I/O: Data out
+
+## We are done for the day
+
+Let's save/export things - there are many ways to do so
+
+::: {.fragment}
+```{r}
+#| eval: true
+#| results: hide
+
+head(my_penguins)
+dir.create("output")
+
+save(my_penguins, file = "output/mypeng.RData")
+saveRDS(my_penguins, file = "output/mypeng.RDS")
+
+write.csv(my_penguins, file = "output/my_penguins.csv")
+write.csv(my_penguins, file = "output/my_penguins_norownames.csv", row.names = FALSE)
+readr::write_csv(my_penguins, file = "output/my_penguins_with_readr.csv")
+write.table(my_penguins, file = "output/my_penguins.txt", sep = ";")
+
+writexl::write_xlsx(my_penguins, path = "output/my_penguins.xlsx")
+
+save.image(file = "output/my_session.RData")
+```
+:::
+
+::: {.fragment}
+CHECK - THOSE - OPTIONS (or get burned afterwards...)
+
+Options worth checking: `quote`, `na`, `col.names`, ...
+:::
+
+## Some extra challenges
+
+* Take your first analytical decision: remove some data points, e.g. filter out the rows where we have no info on the sex
+* Clean up the text values (species, for example)
+* (harder) Make your `my_penguins` look like as similar as possible to the `penguins`
+* (harder) This dataset is in the so-called wide format, and it has FOUR essential measurements - can you think of a way to make it in the long format? "How can this be useful"? (the `tidyr` package can be your friend!)
+* Excel files can be a real mess - can you find one out in the wild and import that?
+
+```{r}
+#| eval: false
+#| echo: false
+
+library("tidyr")
+
+# 1. Wide -> long -----------------------------------------------
+peng_long <- penguins |>
+  mutate(id = row_number()) |>
+  select(id, species, sex,
+         bill_len, bill_dep, flipper_len, body_mass) |>
+  pivot_longer(
+    cols      = c(bill_len, bill_dep, flipper_len, body_mass),
+    names_to  = "measurement",
+    values_to = "value"
+  )
+
+# Predict first: how many rows should this have?
+nrow(penguins) * 4
+nrow(peng_long)
+
+# 2. Payoff: one plot, all four measurements ---------------------
+library("ggplot2")
+ggplot(peng_long, aes(x = species, y = value)) +
+  geom_boxplot() +
+  facet_wrap(~ measurement, scales = "free_y")
+
+ggplot(peng_long, aes(x = species, y = value)) +
+  ggforce::geom_sina() +
+  facet_wrap(~ measurement, scales = "free_y")
+
+# 3. Long -> wide: a cross-tab ----------------------------------
+penguins |>
+  count(species, island)
+
+penguins |>
+  count(species, island) |>
+  pivot_wider(names_from = island, values_from = n, values_fill = 0)
+
+# 4. Round trip: back to the original shape ----------------------
+peng_back <- peng_long |>
+  pivot_wider(names_from = measurement, values_from = value)
+
+dim(peng_back)   # same number of rows as penguins?
+```
+
+
+# What comes next?
+
+We will work with REAL data, yay!
+
+::: {.fragment}
+**Questions** on this, first?
+
+**Thank you for your attention!**
+:::
+
