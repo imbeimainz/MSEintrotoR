@@ -1,0 +1,1878 @@
+---
+title: >
+  Introduction to R<br>
+  Practical session - All chapters in one
+subtitle: >
+  MSE Core Module 1.1
+author:
+- name: Federico Marini
+  affiliation: 
+  - Institute of Medical Biostatistics, Epidemiology and Informatics (IMBEI), Mainz, Germany
+  email: marinif@uni-mainz.de # edit as needed
+  orcid: 0000-0003-3252-7758 # edit as needed
+## add here more authors if needed - and do add the affiliation(s)
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+format:
+  html:
+    toc: true
+    ## for clarity but also for cross-referencing
+    number-sections: true
+    ## this option makes the report one single file easiest to share
+    embed-resources: true
+    ## choosing a nice font
+    mainfont: "Atkinson Hyperlegible"
+    # mainfont: "IBM Plex Sans"
+    ## making links automatically open in a new window 
+    link-external-newwindow: true
+    # code-link: true ## does seem to interfere with the title... pity.
+    ## could embed also the source of the whole document!
+    # code-tools: true
+    ## scrolls with smooth transition to the sections of the document
+    smooth-scroll: true
+    ## controls the aesthetics of the whole thing
+    theme: 
+    - cosmo
+    ## if needed/desired: one can move that scss file and put it to toplevel
+    - ummz_theme.scss
+editor_options: 
+  chunk_output_type: console
+## if needed/desired: one can move & rename that bib file and put it to toplevel
+bibliography: references.bib
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  error    = FALSE,
+  warning  = FALSE,
+  eval     = TRUE,
+  message  = FALSE
+)
+```
+
+# Chapter 1
+
+Here you can find the material for the topics addressed in Chapter 1.
+
+## Checking R's documentation
+
+Using `help` / `?`
+
+```{r}
+#| eval: true
+## this calls the help for a function to plot a histogram
+?hist
+# this is just the same
+help(hist) ## what about ??
+```
+
+Check out what these do
+
+```{r}
+#| eval: true
+?apropos
+apropos("row")
+??row
+```
+
+## Using comments in a chunk
+
+```{r}
+# This is a comment
+
+## This is also a comment
+
+## Comments can also go
+## over multiple lines
+## 
+## and be empty lines (see just above you)
+```
+
+
+# Chapter 2
+
+Here you can find the material for the topics addressed in Chapter 2.
+
+## R is a powerful calculator
+
+Type the following
+
+```{r}
+#| eval: true
+2 + 2
+log(2)
+347 * 73841
+7/2
+7%/%2
+7%%2
+```
+
+```{r}
+#| eval: true
+6^7
+42 * 10^-42
+sqrt(10000)
+```
+
+
+## R has a workspace
+
+... and that can contain (any) object.
+
+```{r}
+ls()
+```
+
+
+## Objects, and assignments
+
+Historically, the underscore was also used for the assignment!
+
+```{r}
+a <- 1
+```
+
+These are the same
+
+```{r}
+2+2
+2 + 2
+
+3*(2+1)
+3 * (2 + 1)
+
+a<-"thisthing"
+a <- "thisthing"
+```
+
+What is better? Why?
+
+Let the code breath, let the reader think of|read|enjoy what you wrote
+
+Hit that Enter key every now and then!
+
+Use the support provided by the IDE for the indentation & co
+
+## Errors, warnings, messages
+
+Three type of information coming from the console
+
+**Errors**: Something went wrong, execution stops
+
+**Warnings**: Something does not smell too right, calls for some inspection
+
+**Messages**: Potentially harmless, potentially very useful. Read them
+
+## What are packages?
+
+R packages…
+
+* Are fundamental components of R ecosystem
+* Extend base R functionality for a specific purpose
+* Bundle new functions, data sets, and documentation
+* Are contributed by independent developers (it could be you!)
+* Have a dependency management to install "everything that is needed"
+
+## Where can I find packages?
+
+Repositories:
+
+* CRAN: Managed official package repository network
+* Bioconductor: curated bioinformatics packages (vignettes mandatory, integrated ecosystem!)
+* GitHub: un-managed, bleeding edge
+
+## How to use packages
+
+* **Install**: once (for every major R version)
+* **Load**: in each session
+* **Use** like any base R functionality, calling the `new_function()` - works also like `pkg::fun()` (it is sometimes good to be explicit)
+
+Relevant commands:
+
+* `install.packages("packagename")` - check it online at CRAN!
+* `installed.packages()` (and know what is the `.libPaths()`)
+* `update.packages()`
+* `library("packagename")`
+* `help(package="packagename")`, `data()`, `browseVignettes()`, `vignette()`, `citation("packagename")`
+
+If on Bioconductor: `BiocManager::install()`
+
+
+# Chapter 3
+
+Here you can find the material for the topics addressed in Chapter 3
+
+## Required packages
+
+We are going to need these packages
+
+```{r}
+library("readxl")
+library("readr")
+library("janitor")
+library("dplyr")
+library("tidyr")
+library("writexl")
+library("haven")
+library("ggplot2")
+library("ggforce")
+```
+
+How do we get them installed? (Tip, you can do more than one in a single command!)
+
+```{r}
+#| eval: false
+
+install.packages(
+  c("readxl",
+    "readr",
+    "janitor",
+    "dplyr",
+    "tidyr",
+    "writexl",
+    "haven",
+    "ggplot2",
+    "ggforce"))
+```
+
+
+
+## Going by hand
+
+This is possibly a "friends don't let friends" kind of thing
+
+Still, let's see where this takes us:
+
+```{r}
+#| error: true
+#| eval: true
+#| output: false
+
+head(penguins_raw)
+pen_id <- c(1, 2, 3, 4, 5, 6)
+pen_species <- c("Adelie", "Adelie", "Adelie", "Adelie", "Adelie", "Adelie")
+
+diy_penguins <- data.frame(
+  id = pen_id,
+  species = pen_species
+)
+cbind(pen_id, pen_species)
+
+pen_species <- rep("Adelie", 6)
+diy_penguins <- data.frame(
+  id = pen_id,
+  species = pen_species
+)
+diy_penguins
+cbind(pen_id, pen_species)
+```
+
+## Data in
+
+Data can come in different formats (and shapes, possibly):
+
+- Your files, the clipboard, a URL
+- Plain text file: Comma-separated, tab-delimited, ...
+- R format file
+- SAS/Stata/SPSS file (there's the CRAN package `haven`)
+- Spreadsheet (Excel) - package `readxl` is highly recommended!
+- Database: RSQLite, RPostgreSQL, RMySQL, ...
+
+Colleagues might even provide data to you as a/within a package (I did that a long time ago -  see https://github.com/federicomarini/rbioc2016 for an example)
+
+R is a language, we need to learn the words that do things. 
+
+## The vocabulary of importing
+
+... and exporting
+
+- `read.table()`,`write.table()` + `read.csv()`, `read.delim()`
+- `load()`,`save()`/`readRDS()`,`saveRDS()`
+- via `haven` : `read_sas()`,`read_spss()` /`write_sas()`,`write_sav()`
+- via `readxl`: `read_excel()`
+
+Check out their documentation pages!
+
+Other options: `vroom::vroom()`, the RStudio GUI, ...
+
+Who has seen the option `stringsAsFactors=FALSE`?
+
+## On pain, paths, files, and projects
+
+Where is R right now?
+
+```{r}
+#| eval: true
+getwd()
+list.files()
+```
+
+Absolute vs. relative paths
+
+```{r}
+#| eval: false
+# absolute: works on ONE computer only
+read_csv("C:/Users/maria/Desktop/course/datasets/nhanes.csv")
+
+# relative: works on ANY computer that has the same project
+read_csv("datasets/nhanes.csv")
+```
+
+## Data processing
+
+Inspecting data - What can we use for this?
+
+* `head()` and `tail()`
+* `dim()`
+* `nrow()` and `ncol()`
+* `length()`
+* `names()`, `colnames()`, `rownames()`
+
+* `help()` - `?`
+* `View()`
+* `summary()`
+* `str()`
+* `class()`
+* `dplyr::glimpse()`
+
+
+## Working with a vector
+
+```{r}
+my_first_vec <- c(6, 1, 3, 6, 10, 5)
+```
+
+What happens if you do this?
+
+```{r}
+#| eval: true
+
+my_first_vec[2]
+my_first_vec[c(5, 6)]
+my_first_vec[-c(5,6)]
+my_first_vec > 5
+my_first_vec[my_first_vec > 5]
+```
+
+## How to access what is in a data frame?
+
+Slicing and dicing, the basic way - most rectangular datasets can be dealt with...
+
+```{r eval=FALSE}
+dataset[ROWS, COLUMNS]
+```
+
+You can subset with...
+
+- integers
+- blank spaces
+- names
+- logical vectors
+
+Sometimes you could think it's all about the money (`$`)
+
+## A quick musical intermezzo
+
+What happens if you do this?
+
+```{r}
+beat_df <- data.frame(
+  name = c("John", "Paul", "George", "Ringo"),
+  birth = c(1940, 1942, 1943, 1940),
+  instrument = c("guitar", "bass", "guitar", "drums")
+)
+
+beat_df
+## or
+beat_df <- readxl::read_xlsx("datasets/beatles.xlsx")
+```
+
+```{r}
+#| eval: true
+beat_df[c(2, 4), 3]
+beat_df[ , 1]
+beat_df[ , "instrument"]
+beat_df$instrument
+```
+
+
+## The first dive with penguins
+
+Some more functions that could come handy or one or more columns
+
+* `table()`
+* `unique()`
+* `levels()` and `relevel()`
+* `is.na()`
+* `sum()`
+* `knitr::kable()`
+* `ggplot2::ggplot()` 
+* `summary()` again
+* `identical()`, `all.equal()`
+
+```{r}
+head(penguins_raw)
+dim(penguins_raw)
+
+head(penguins)
+dim(penguins)
+```
+
+## Ceci n'est pas une pipe
+
+Meet the native R pipe `|>` 
+
+```{r}
+penguins |> dim()
+# is the same as
+dim(penguins)
+```
+
+This has a comfortable shortcut (find it out in RStudio!)
+
+## Time to clean up!
+
+... because I made them dirty for you!
+
+```{r}
+#| echo: true
+#| eval: true
+
+dirty_penguins <- penguins_raw
+
+dirty_penguins$`Body Mass (g)`[42] <- -999 
+dirty_penguins$Sex[6] <- "MALE "
+dirty_penguins$Comments[4] <- ""
+
+saveRDS(dirty_penguins, "datasets/dirty_penguins.RDS")
+```
+
+Read that in and assess/check/find out what happened
+
+* How big is this dataset, what types are in?
+* What do the values look like?
+* Which columns are constant (possibly "useless")?
+* How much is missing, and where?	 <!-- colSums(is.na(penguins_raw)) -->
+* Are there impossible values?	<!-- range(), a quick filter() -->
+
+## Grooming them well
+
+Let's return back to the `penguins_raw`
+
+```{r}
+my_penguins <- penguins_raw
+
+my_penguins$`Sample Number`
+my_penguins$Sex
+my_penguins$Species
+```
+
+## Grooming - Round 2
+
+Column names have those nasty spaces...
+
+```{r}
+library("janitor")
+my_penguins <- my_penguins |> clean_names()
+
+colnames(penguins_raw)
+colnames(my_penguins)
+```
+
+```{r}
+my_penguins <- my_penguins[, -17]
+my_penguins$comments <- NULL
+```
+
+## Transforming penguins
+
+```{r}
+my_penguins$mass_kg <- my_penguins$body_mass_g / 1000
+
+hist(my_penguins$body_mass_g, breaks = 20)
+
+my_penguins$z_mass <- as.numeric(scale(my_penguins$body_mass_g))
+hist(my_penguins$z_mass, breaks = 20)
+
+my_penguins$mass_class <- cut(my_penguins$body_mass_g, breaks = 4)
+```
+
+## Transforming penguins, with `dplyr`
+
+```{r}
+library("dplyr")
+my_penguins$body_mass_g |> summary()
+
+my_penguins |> 
+  mutate(mc2 = case_when(
+    body_mass_g < 3500 ~ "light",
+    body_mass_g < 4500 ~ "medium",
+    .default = "heavy")
+  ) -> my_penguins
+
+table(my_penguins$mc2)
+```
+
+Notice here the "right hand assignment" & the order of the classes - what "should be done on top"?
+
+## Saving and exporting 
+
+We are done for the day, let's save/export things - there are many ways to do so
+
+```{r}
+#| eval: true
+
+head(my_penguins)
+dir.create("output")
+
+save(my_penguins, file = "output/mypeng.RData")
+saveRDS(my_penguins, file = "output/mypeng.RDS")
+
+write.csv(my_penguins, file = "output/my_penguins.csv")
+write.csv(my_penguins, file = "output/my_penguins_norownames.csv", row.names = FALSE)
+readr::write_csv(my_penguins, file = "output/my_penguins_with_readr.csv")
+write.table(my_penguins, file = "output/my_penguins.txt", sep = ";")
+
+writexl::write_xlsx(my_penguins, path = "output/my_penguins.xlsx")
+
+save.image(file = "output/my_session.RData")
+```
+
+CHECK - THOSE - OPTIONS (or get burned afterwards...)
+
+## Some extra challenges
+
+* Take your first analytical decision: remove some data points, e.g. filter out the rows where we have no info on the sex
+* Clean up the text values (species, for example)
+* (harder) Make your `my_penguins` look like as similar as possible to the `penguins`
+* (harder) This dataset is in the so-called wide format, and it has FOUR essential measurements - can you think of a way to make it in the long format? "How can this be useful"? (the `tidyr` package can be your friend!)
+* Excel files can be a real mess - can you find one out in the wild and import that?
+
+```{r}
+#| eval: true
+#| echo: false
+
+library("tidyr")
+
+# 1. Wide -> long -----------------------------------------------
+peng_long <- penguins |>
+  mutate(id = row_number()) |>
+  select(id, species, sex,
+         bill_len, bill_dep, flipper_len, body_mass) |>
+  pivot_longer(
+    cols      = c(bill_len, bill_dep, flipper_len, body_mass),
+    names_to  = "measurement",
+    values_to = "value"
+  )
+
+# Predict first: how many rows should this have?
+nrow(penguins) * 4
+nrow(peng_long)
+
+# 2. Payoff: one plot, all four measurements ---------------------
+library("ggplot2")
+ggplot(peng_long, aes(x = species, y = value)) +
+  geom_boxplot() +
+  facet_wrap(~ measurement, scales = "free_y")
+
+ggplot(peng_long, aes(x = species, y = value)) +
+  ggforce::geom_sina() +
+  facet_wrap(~ measurement, scales = "free_y")
+
+# 3. Long -> wide: a cross-tab ----------------------------------
+penguins |>
+  count(species, island)
+
+penguins |>
+  count(species, island) |>
+  pivot_wider(names_from = island, values_from = n, values_fill = 0)
+
+# 4. Round trip: back to the original shape ----------------------
+peng_back <- peng_long |>
+  pivot_wider(names_from = measurement, values_from = value)
+
+dim(peng_back)   # same number of rows as penguins?
+```
+
+
+# Chapter 4
+
+Here you can find the material for the topics addressed in Chapter 4
+
+## Required packages
+
+We are going to need these packages
+
+```{r}
+library("dplyr")
+library("janitor")
+library("NHANES")
+library("readxl")
+library("writexl")
+library("haven")
+```
+
+## NHANES, in this course
+
+- We will use the `NHANES` **package**: cycles **2009-10 and 2011-12**, about 10,000 rows, 77 variables, already cleaned
+- We will retrieve some **CDC files** (SAS `.XPT`): one file per topic, with the cycle as a letter suffix (`_F` = 2009-10, `_G` = 2011-12)
+- Same people, two sources: this is why we will **join** these together
+
+## Meet `dplyr`
+
+`dplyr` is one of the main packages of the so called `tidyverse` 
+
+The functions in `dplyr` are also called verbs
+
+Each verb does **one thing**, takes a data frame, and returns a data frame. 
+That is why you can chain them together nicely with `|>`
+
+Yes, most of the operations can very well be done with base-R, but this flavour is sometimes well rooted in how one thinks data analysis
+
+## The verbs of `dplyr`
+
+* Acting on **Rows**
+  - `filter()` - keep rows that meet a condition 
+  - `arrange()` - sort rows 
+  - `distinct()` - remove duplicate rows 
+* Acting on **Columns** 
+  - `select()` - keep, drop or reorder columns
+  - `rename()` - change column names
+  - `mutate()` - create or change columns
+* Acting on **Groups** 
+  - `group_by()` + `summarise()` - one summary row per group
+  - `count()` - shortcut: how many rows per group
+* Acting on **Tables** 
+  - `left_join()` - add columns from another table 
+  - `bind_rows()` - stack tables on top of each other 
+
+## An example of dplyr
+
+```{r}
+#| eval: true
+NHANES |>
+  filter(Age >= 18) |>                       # rows
+  mutate(obese = BMI >= 30) |>               # columns
+  group_by(Sex) |>                           # groups
+  summarise(prop_obese = mean(obese, na.rm = TRUE))
+```
+
+*Read it as a sentence: "take the data, **then** keep adults, **then** add a column, **then** ..."*
+
+Official dplyr (and more) cheat sheet: https://rstudio.github.io/cheatsheets/
+
+## Our guiding question
+
+**What is the prevalence of diabetes by BMI category, and how does it compare with HbA1c?**
+
+Let's think out loud, what will we need?
+
+Where can we check what we have in the `NHANES` data?
+
+Do we have everything we need? Do we need to retrieve some additional data?
+
+## R object: the NHANES package
+
+Load the package and the dataset itself, and have a first glance at that
+
+```{r}
+#| eval: true
+library("NHANES")
+data(NHANES)
+head(NHANES)
+glimpse(NHANES)
+```
+
+## Which variables would you pick?
+
+Which few variables would you pick to describe a population (always remember the purpose we had!)
+
+```{r}
+nh <- NHANES |>
+  select(ID, SurveyYr, Gender, Age, BMI, Diabetes, BPSys1, BPDia1, Smoke100)
+```
+
+(Yes, we took a few more, but this is ok)
+
+## Let's take a round trip - with Excel
+
+Exporting & reimporting... What can possibly go wrong there
+
+```{r}
+#| eval: true
+write_xlsx(nh, "datasets/nhanes_small.xlsx")
+file.exists("datasets/nhanes_small.xlsx")
+
+nh_xl <- read_excel("datasets/nhanes_small.xlsx")
+identical(nh, nh_xl)    
+# all.equal(nh, nh_xl)
+glimpse(nh)
+glimpse(nh_xl)              
+```
+
+## A quick assessment
+
+Using these functions will never kill a kitten
+
+```{r}
+dim(nh)
+
+summary(nh)
+
+colSums(is.na(nh))
+
+nh |> summarise(across(everything(), n_distinct))
+```
+
+
+Don't be afraid to put extra check on your data, even if it seems not too useful
+
+
+## Subsetting data - Selecting variables
+
+Can you guess what these commands will return?
+
+```{r include=FALSE}
+hook_output <- knitr::knit_hooks$get("output")
+knitr::knit_hooks$set(output = function(x, options) {
+    n <- options$output.lines
+    if (is.null(n)) return(hook_output(x, options))
+    lines <- unlist(strsplit(x, "\n", fixed = TRUE))
+    if (length(lines) > n) {
+        x <- paste(
+            c(
+                lines[seq_len(n)],
+                sprintf("<snipped %s lines>", length(lines) - n)
+            ),
+            collapse = "\n"
+        )
+    }
+    hook_output(x, options)
+})
+```
+
+```{r}
+#| eval: true
+#| output.lines: 10
+
+nh |> select(Age, BMI)
+nh |> select(-SurveyYr)
+nh |> select(starts_with("BP"))
+```
+
+
+## Subsetting data - Selecting cases & performing logical comparisons
+
+What are these commands returning?
+
+```{r}
+#| eval: true
+#| output.lines: 10
+
+nh |> filter(Age >= 18)
+nh |> filter(Age >= 18, Gender == "female")
+nh |> filter(Smoke100 == "Yes" | Diabetes == "Yes")
+nh |> filter(SurveyYr %in% c("2009_10", "2011_12"))
+```
+
+## Predict first: how many rows?
+
+```{r}
+#| eval: true
+nrow(nh)
+nrow(filter(nh, BMI > 30))
+nrow(filter(nh, BMI <= 30))
+nrow(filter(nh, BMI > 30)) + nrow(filter(nh, BMI <= 30))   # vs nrow(nh)?
+```
+
+What is the missing piece?
+
+```{r}
+#| eval: true
+sum(is.na(nh$BMI))    # the missing piece
+```
+
+
+## Handling duplicates
+
+Is `ID` unique?
+
+Nope
+
+```{r}
+#| eval: true
+#| output.lines: 10
+
+head(nh)
+nrow(nh)
+n_distinct(nh$ID)
+
+nh |> count(ID) |> filter(n > 1)
+nh |> get_dupes(ID)
+```
+
+## Remove duplicates
+
+
+There's many ways to do so, here's one
+
+```{r}
+nh_u <- nh |> 
+  distinct(ID, .keep_all = TRUE)   # will keep first row per ID
+nrow(nh_u)
+
+nh |> 
+  distinct() |>                    # fully identical rows only
+  nrow()
+```
+
+
+## Sorting data - Sorting cases
+
+Again - what happens here?
+
+
+```{r}
+#| eval: true
+#| output.lines: 10
+
+nh_u |> arrange(Age)
+nh_u |> arrange(desc(BMI))
+nh_u |> arrange(Gender, desc(Age))
+```
+
+
+## Sorting data - Sorting variables
+
+
+... and here?
+
+```{r}
+#| eval: true
+#| output.lines: 10
+
+nh_u |> relocate(BMI, .after = Age)
+nh_u |> select(Age, everything())
+```
+
+
+Much of this is quite intuitive, but the verbs and functions make it pretty straightforward to work with data...
+
+
+
+
+## Transforming data - Renaming variables
+
+Sometimes it is for comfort, some other for readability...
+
+```{r}
+#| eval: true
+nh_u <- nh_u |> rename(sex = Gender, survey_year = SurveyYr)
+```
+
+## Transforming data - Recoding variables & categorizing
+
+Mixing the flavours we have seen already for the `penguins`...
+
+```{r}
+#| eval: true
+nh_u <- nh_u |>
+  mutate(
+    bmi_class = case_when(
+      BMI < 18.5 ~ "underweight",
+      BMI < 25   ~ "normal",
+      BMI < 30   ~ "overweight",
+      BMI >= 30  ~ "obese"
+    ),
+    age_group = cut(Age, breaks = c(0, 18, 40, 60, Inf), right = FALSE)
+  )
+
+count(nh_u, bmi_class)
+count(nh_u, age_group)
+```
+
+
+## Transforming data - Calculate new variables from old
+
+One can do pretty much everything
+
+Meaningful things come first, let's put it like this - can we get for example the mean arterial pressure? How is that computed?
+
+```{r}
+#| eval: true
+nh_u <- nh_u |>
+  mutate(map_bp = BPDia1 + (BPSys1 - BPDia1) / 3)   # mean arterial pressure
+
+summary(nh_u$map_bp)
+```
+
+
+## Group-by operations
+
+One step at a time, we are getting close!
+
+
+```{r}
+#| eval: true
+
+nh_u |>
+  count(bmi_class) 
+
+nh_u |>
+  count(bmi_class) |>
+  mutate(prop = n / sum(n))
+```
+
+
+## Let's go back to the basics
+
+Just briefly
+
+
+```{r}
+#| eval: true
+# nh_u$Diabetes == "Yes"
+
+sum(nh_u$Diabetes == "Yes")
+
+sum(nh_u$Diabetes == "Yes", na.rm = TRUE)
+
+sum(is.na(nh_u$Diabetes))
+
+nrow(nh_u)
+
+552/(6779-126)
+
+# or use this
+mean(nh_u$Diabetes == "Yes", na.rm = TRUE)
+```
+
+
+## Wait a second!
+
+We have all we need to answer our guiding question!
+
+
+```{r}
+#| eval: true
+nh_u |>
+  group_by(bmi_class) |>
+  summarise(
+    n = n(),
+    diabetes = mean(Diabetes == "Yes", na.rm = TRUE)
+  )
+
+# what happens without na.rm = TRUE ?
+nh_u |>
+  group_by(bmi_class) |>
+  summarise(
+    n = n(),
+    diabetes = mean(Diabetes == "Yes"))
+```
+
+## Stepping up the challenge
+
+What if we have two grouping variables?
+
+Let's do this by `age_group` AND `bmi_class`!
+
+```{r}
+nh_u |>
+  group_by(age_group, bmi_class) |>
+  summarise(
+    n = n(), 
+    diabetes = mean(Diabetes == "Yes", na.rm = TRUE)
+  )
+```
+
+
+## Combining data sets
+
+Getting data from the NHANES website 
+
+We need data from https://wwwn.cdc.gov/Nchs/Nhanes/ - for both time points!
+
+Go to https://wwwn.cdc.gov/Nchs/Nhanes/continuousnhanes/default.aspx?BeginYear=2009
+
+-> Laboratory Data -> Search for Glycohemoglobin -> Copy the link to that
+
+
+```{r}
+#| eval: true
+
+# check the URLs on the CDC site before class: they have moved in the past
+
+url_f <- "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2009/DataFiles/GHB_F.xpt"
+download.file(url_f, destfile = "datasets/GHB_F.XPT")
+
+url_g <- "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2011/DataFiles/GHB_G.XPT"
+download.file(url_g, destfile = "datasets/GHB_G.XPT")
+```
+
+## Reading SAS transport files
+
+Yep, just like that
+
+```{r}
+ghb_f <- haven::read_xpt("datasets/GHB_F.XPT")    # 2009-10
+ghb_g <- haven::read_xpt("datasets/GHB_G.XPT")    # 2011-12
+
+glimpse(ghb_g)
+glimpse(ghb_f)
+```
+
+## Adding more rows
+
+Combining together the two datasets from the different periods
+
+```{r}
+#| eval: true
+dim(ghb_f)
+dim(ghb_g)
+
+ghb <- bind_rows(ghb_f, ghb_g)
+dim(ghb) # does the arithmetic work?
+
+n_distinct(ghb$SEQN)
+```
+
+
+Of course, some obligatory checks are expected BEFORE doing this
+
+
+## Adding more columns: join!
+
+We want to keep all observation in our `nh_u`
+
+```{r}
+#| eval: true
+nrow(nh_u)
+
+nh_ghb <- nh_u |>
+  left_join(ghb, by = join_by(ID == SEQN))
+
+nrow(nh_ghb) # Is this the same as before? always check!
+```
+
+We could have also used an `inner_join()` (keeps observations from x that have a matching key in y)
+
+## Who did not match?
+
+Can be just out of curiosity...
+
+```{r}
+#| eval: true
+nh_u |> 
+  anti_join(ghb, by = join_by(ID == SEQN)) |> nrow()
+ghb |> 
+  anti_join(nh_u, by = join_by(SEQN == ID)) |> nrow()
+
+nh_ghb |> 
+  summarise(missing_hba1c = sum(is.na(LBXGH)))
+
+# equivalent to...
+nh_ghb$LBXGH |> is.na() |> sum()
+```
+
+Can you spot what is different?
+
+## Do the HbA1c value make sense?
+
+Here comes the other half of the guiding question!
+
+
+```{r}
+#| eval: true
+nh_ghb |>
+  group_by(Diabetes) |>
+  summarise(n = n(), mean_hba1c = mean(LBXGH, na.rm = TRUE))
+```
+
+Can you tell me in **one sentence** what you have found with your results?
+
+## Joining is powerful
+
+But sometimes it can bite you (one-to-many)
+
+```{r}
+#| eval: true
+patients <- tibble(id = 1:3, name = c("A", "B", "C"))
+visits   <- tibble(id = c(1, 1, 2), date = c("2024-01-05", "2024-02-10", "2024-01-20"))
+
+left_join(patients, visits, by = "id")   # 3 patients in, 4 rows out
+```
+
+
+## Saving data - as R objects and as plain text
+
+
+This goes pretty straightforward
+
+```{r}
+#| eval: true
+saveRDS(nh_ghb, "datasets/nhanes_ghb.RDS")
+readr::write_csv(nh_ghb, "datasets/nhanes_ghb.csv")
+
+# Excel was already done in part 1
+list.files("datasets")
+```
+
+
+
+Side note: You might notice that sometimes I do not type the arguments of a functions.
+
+There is NEVER harm in typing them extra (the positional arguments sometimes can give you unexpected behaviors)
+
+
+```{r}
+#| eval: true
+nh_ghb |>
+  group_by(Diabetes) |>
+  summarise(n = n(), mean_hba1c = mean(LBXGH, na.rm = TRUE))
+
+library("ggplot2")
+ggplot(nh_ghb,
+       aes(x = Diabetes, y = LBXGH)) + geom_jitter()
+```
+
+Do you see what I see?
+
+## Some extra challenges
+
+* Answer the same question, but restrict to only one time window
+* Take another guiding question
+  - Is sleep related to BMI?
+  - Does physical activity go with a lower diabetes prevalence?	
+  - Is smoking related to blood pressure, by age group?
+* Grab the health insurance status information (HIQ)
+  - Is health insurance related to income and age?
+* Come up with your own new question and address that!
+
+For each of these cases, write **one sentence** under your result that states what you found.
+
+# Chapter 5
+
+Here you can find the material for the topics addressed in Chapter 5
+
+## There are data types
+
+Some of them, we already encountered - and some of them are... a bit special
+
+* Numbers
+* Strings
+* Factors
+* Dates
+* Missing (yep, a missing info can also be/become an information)
+
+We have been working with our `nh_ghb` dataset, let's reload it into our session
+
+```{r}
+library("NHANES")
+library("dplyr")
+
+# checkpoint from chapter 4
+nh_ghb <- readRDS("datasets/nhanes_ghb.RDS")
+```
+
+
+## Factors - text vs. categories
+
+Let's have a closer look, with a specific focus on this!
+
+
+```{r}
+#| eval: true
+class(nh_ghb$bmi_class)   
+unique(nh_ghb$bmi_class)
+class(nh_ghb$Diabetes)    
+levels(nh_ghb$Diabetes)
+
+unclass(nh_ghb$Diabetes)
+
+table(nh_ghb$bmi_class)
+table(nh_ghb$bmi_class, useNA = "always")
+```
+
+What order is this? is it meaningful?
+
+
+## Levels have an order
+
+... and it can be related to a meaning
+
+```{r}
+#| eval: true
+levels(NHANES$Education)
+levels(NHANES$AgeDecade)       # Can you spot anything odd in the labels?
+
+table(NHANES$Education)
+## or 
+NHANES |> 
+  count(Education)
+```
+
+
+The "information content" is the same, the behavior/format sometimes is not. Where do you find all this info on functions?
+
+
+## Set the order yourself
+
+Let's fix the `bmi_class`
+
+
+```{r}
+#| eval: true
+nh_ghb <- nh_ghb |>
+  mutate(
+    bmi_class = factor(bmi_class,
+                       levels = c("underweight", "normal", "overweight", "obese"))
+  )
+
+levels(nh_ghb$bmi_class)
+count(nh_ghb, bmi_class)           # now the table reads in a meaningful order
+```
+
+What happened to our `NA`s?
+
+For more factor-centric functions, you can have a look at the `forcats` package (yes, this is an intentional anagram of `factors`).
+
+## Why bother? 
+
+Well, because the order shows up also in plots
+
+```{r}
+#| eval: true
+#| echo: true
+
+library("ggplot2")
+
+nh_ghb |>
+  # drop_na(bmi_class) |>
+  count(bmi_class) |>
+  ggplot(aes(x = bmi_class, y = n)) +
+  geom_col()
+```
+
+
+## Missing values - `NA` is "unknown"
+
+It is not zero!
+
+Back to some basics:
+
+```{r}
+#| eval: true
+x <- c(120, 135, NA, 110)
+mean(x)
+mean(x, na.rm = TRUE)
+is.na(x)
+sum(is.na(x))
+```
+
+## How much is missing, and where?
+
+This is quite a useful overview (kind of applies to any rectangular data...)
+
+
+```{r}
+#| eval: true
+nh_ghb |>
+  summarise(across(everything(), ~ sum(is.na(.x)))) |>
+  t()
+```
+
+
+## Back to blood pressure
+
+How many/much is missing?
+
+```{r}
+#| eval: true
+sum(is.na(nh_ghb$BPSys1))
+mean(is.na(nh_ghb$BPSys1))         # proportion missing
+```
+
+*Who is missing? Make a guess before you look.*
+
+## Is it random?
+
+Let's have a look
+
+```{r}
+#| eval: true
+nh_ghb |>
+  mutate(bp_missing = is.na(BPSys1)) |>
+  group_by(age_group) |>
+  summarise(n = n(), prop_missing = mean(bp_missing))
+```
+
+In this case, the info is missing by **design** (children not measured), not by accident. 
+
+You can check it with `range(nh_ghb$Age[!is.na(nh_ghb$BPSys1)])`.
+
+## Three ways to deal with NAs
+
+Run these commands sequentially, and see what comes out
+
+```{r}
+#| eval: true
+# 1. ignore inside the function
+nh_ghb |> 
+  summarise(mean_sbp = mean(BPSys1, na.rm = TRUE),
+            n = n())
+
+# 2. drop rows with NA in one variable
+nh_ghb |> 
+  drop_na(BPSys1) |> 
+  summarise(mean_sbp = mean(BPSys1), 
+            n = n())
+
+# 3. filter explicitly
+nh_ghb |> 
+  filter(!is.na(BPSys1)) |> 
+  summarise(mean_sbp = mean(BPSys1), 
+            n = n())
+```
+
+`drop_na()` without column names drops rows with **any** NA. 
+
+Check `nrow()` before and after. Which one is the right choice is an explicit **analytic decision**, not just a technicality!
+
+## Does it matter for the answer?
+
+This is a rhetorical question...
+
+```{r}
+#| eval: true
+
+# all ages vs. adults only
+nh_ghb |> 
+  summarise(mean_sbp = mean(BPSys1, na.rm = TRUE))
+## vs
+nh_ghb |> 
+  filter(Age >= 18) |> 
+  summarise(mean_sbp = mean(BPSys1, na.rm = TRUE))
+```
+
+Among adults, is `BPSys1` missing more often in one sex or one age group? Or one BMI class? Use `is.na()` inside `group_by() |> summarise()`.
+
+## Dates
+
+This is how they can come in
+
+```{r}
+#| eval: true
+linelist <- data.frame(
+  id     = 1:6,
+  onset  = c("2024-03-01", "2024-03-02", "2024-03-05",
+             "2024-03-09", "2024-03-10", "2024-03-12"),
+  report = c("2024-03-04", "2024-03-05", "2024-03-07",
+             "2024-03-12", "2024-03-15", "2024-03-14")
+)
+
+glimpse(linelist)
+```
+
+R does not know these are dates (yet) - Your best friend, possibly: `lubridate` (yes, package developers often like word puns)
+
+
+## Parse these dates!
+
+This is - of course - just an appetizer
+
+
+```{r}
+#| eval: true
+
+library("lubridate")
+linelist <- linelist |>
+  mutate(onset = ymd(onset), 
+         report = ymd(report))
+
+glimpse(linelist)
+
+dmy("01/03/2024")              # other orders: dmy(), mdy()
+ymd("2024-13-45")              # what happens with impossible dates?
+```
+
+
+## Compute with dates
+
+Keeping it simple here...
+
+
+```{r}
+#| eval: true
+linelist |>
+  mutate(delay = report - onset)               # a time difference
+
+linelist |>
+  mutate(delay_days = as.numeric(report - onset)) |>
+  summarise(mean_delay = mean(delay_days))
+```
+
+... but you can see that some simple functions make this quite easy!
+
+
+## From dates to weeks
+
+There are clever ways of converting among units!
+
+
+```{r}
+#| eval: true
+linelist |>
+  mutate(week = floor_date(onset, unit = "week")) 
+```
+
+
+```{r}
+#| eval: true
+#| echo: true
+linelist |>
+  mutate(week = floor_date(onset, unit = "week")) |>
+  count(week) |>
+  ggplot(aes(x = week, y = n)) +
+  geom_col()
+```
+
+NHANES has no calendar dates, but outbreak data will be full of them.
+
+## Develop (at least) these habits
+
+* Check the **type** of every column (`glimpse()` or `summary()` can be your very good friends)
+* Set the **order** of categories on purpose
+* Ask **why** something is missing before dealing with it
+
+Always remember: to get the right answer, start asking the right question(s) - and don't be afraid to ask questions.
+
+
+
+# Chapter 6
+
+Here you can find the material for the topics addressed in Chapter 6
+
+## Let's get all set for this chapter!
+
+```{r}
+library("dplyr")
+library("tidyr")
+library("gapminder")
+library("ggplot2")
+
+# checkpoint from chapter 4, with the factor order from chapter 5
+nh <- readRDS("datasets/nhanes_ghb.RDS") |>
+  mutate(bmi_class = factor(bmi_class,
+                            levels = c("underweight", "normal", "overweight", "obese")))
+```
+
+
+## ggplot basics - The grammar: a plot is built from layers
+
+```{r}
+#| eval: true
+ggplot(data = nh, mapping = aes(x = Age, y = BMI)) +
+  geom_point()
+```
+
+- **data**: which table
+- **aes()**: which columns go where (x, y, colour, size, ...)
+- **geom_...()**: how to draw them (points, bars, boxes, ...)
+- layers are added with `+`
+
+
+Something inside `aes()` will be mapped to the data, outside of it will be treated as a constant
+
+
+## Start empty, add layer by layer
+
+```{r}
+#| eval: true
+ggplot(nh)                            # nothing to see
+ggplot(nh, aes(x = Age, y = BMI))     # axes appear, no data drawn (data "limits" are known)
+ggplot(nh, aes(x = Age, y = BMI)) + geom_point()
+```
+
+## One variable: histogram
+
+```{r}
+#| eval: true
+ggplot(nh, aes(x = BMI)) +
+  geom_histogram(bins = 30)
+
+ggplot(nh, aes(x = BMI)) +
+  geom_histogram(binwidth = 2)            
+```
+
+
+Does the shape change?
+
+What alternatives to the simple histogram do you know?
+
+Density plots, ridge plots, rainfall plots, violin plots, sina plot...
+
+## Two variables: scatter plot
+
+In this case, two continuous variables
+
+
+```{r}
+#| eval: true
+ggplot(nh, aes(x = Age, y = BMI)) +
+  geom_point(alpha = 0.2)                    
+```
+
+Why am I using alpha? Try without that!
+
+## Add more aesthetics
+
+Look at the placement of the `colour`:
+
+```{r}
+#| eval: true
+ggplot(nh, aes(x = Age, y = BMI, colour = sex)) +
+  geom_point(alpha = 0.3)
+
+ggplot(nh, aes(x = Age, y = BMI)) +
+  geom_point(colour = "steelblue", alpha = 0.3)
+```
+
+What changed?
+
+<!-- inside aes() = mapped to data, outside = fixed value -->
+
+## Facets: one panel per group
+
+You'll probably learn to love small multiples
+
+```{r}
+#| eval: true
+ggplot(nh, aes(x = BMI)) +
+  geom_histogram(bins = 30) +
+  facet_wrap(~ sex)
+```
+
+## Labels and themes
+
+Controlling the aspect of the side dishes is important as well!
+
+```{r}
+#| eval: true
+ggplot(nh, aes(x = BMI, fill = sex)) +
+  geom_histogram(bins = 30, alpha = 0.6, position = "identity") +
+  labs(title = "BMI distribution in NHANES",
+       x = "BMI (kg/m²)", y = "Number of participants",
+       fill = "Sex") +
+  theme_minimal()
+```
+
+
+Themes - an excellent and comfy way to change the looks of a plot. There are many collections of themes out there
+
+## Save that plot!
+
+Each plot done via `ggplot` is returned as an object (and printed)
+
+... and objects can be saved - how to do this efficiently?
+
+
+```{r}
+#| eval: true
+p <- ggplot(nh, aes(x = BMI)) + geom_histogram(bins = 30)
+p
+ggsave(p, filename = "bmi_hist.png", width = 6, height = 4, dpi = 300)
+```
+
+You can also use the RStudio interface, but I would heartily recommend *against* that.
+
+## From the previous chapters, now as plots
+
+### Chapter 3 flavour: distributions by group
+
+Let's have a look at the relationship between systolic blood pressure and smoking habits!
+
+
+```{r}
+#| eval: true
+nh |>
+  drop_na(BPSys1, Smoke100) |>
+  ggplot(aes(x = Smoke100, y = BPSys1)) +
+  geom_boxplot()
+```
+
+
+
+Is this a fair comparison? What did we forget about age (chapter 5)?
+
+
+## Adults only, split by age group
+
+
+We will use the facets here...
+
+
+
+```{r}
+#| eval: true
+nh |>
+  filter(Age >= 18) |>
+  drop_na(BPSys1, Smoke100) |>
+  ggplot(aes(x = Smoke100, y = BPSys1)) +
+  geom_boxplot() +
+  facet_wrap(~ age_group)
+```
+
+
+
+Let's try here some other `geom_`s! 
+
+`geom_jitter()`, `geom_violin()`, `ggforce::geom_sina` are just some of my favourites
+
+
+### Chapter 4: the guiding question
+
+
+Remember that? "What is the prevalence of diabetes by BMI category, and how does it compare with HbA1c?"
+
+
+
+```{r}
+#| eval: true
+nh |>
+  drop_na(bmi_class, Diabetes) |>
+  group_by(bmi_class) |>
+  summarise(prevalence = mean(Diabetes == "Yes")) |>
+  ggplot(aes(x = bmi_class, y = prevalence)) +
+  geom_col() +
+  labs(x = "BMI class", y = "Diabetes prevalence")
+```
+
+
+Now... by age group too
+
+
+```{r}
+#| eval: true
+nh |>
+  drop_na(bmi_class, Diabetes, age_group) |>
+  group_by(age_group, bmi_class) |>
+  summarise(prevalence = mean(Diabetes == "Yes"), .groups = "drop") |>
+  ggplot(aes(x = bmi_class, y = prevalence, fill = age_group)) +
+  geom_col(position = "dodge")
+```
+
+## HbA1c vs. diabetes status
+
+The `geom_sina()` shows the density distribution AND individual observations
+
+```{r}
+#| eval: true
+nh |>
+  drop_na(LBXGH, Diabetes) |>
+  ggplot(aes(x = Diabetes, y = LBXGH)) +
+  ggforce::geom_sina() +
+  labs(y = "HbA1c (%)")
+```
+
+*Does this make sense?*
+
+I know it sounds obvious and possibly naif - but don't you ever forget to ask this question, every now and then. And especially after generating a result ^_^
+
+
+### Chapter 5: missing values
+
+Let's **see** the proportion of missing data
+
+
+```{r}
+#| eval: true
+nh |>
+  mutate(bp_missing = is.na(BPSys1)) |>
+  group_by(age_group) |>
+  summarise(prop_missing = mean(bp_missing)) |>
+  ggplot(aes(x = age_group, y = prop_missing)) +
+  geom_col()
+```
+
+One plot vs one table - who wins?
+
+Immediateness vs precision?
+
+### Chapter 5: the epi curve
+
+```{r}
+#| eval: true
+library("lubridate")
+linelist <- tibble(
+  id    = 1:6,
+  onset = ymd(c("2024-03-01", "2024-03-02", "2024-03-05",
+                "2024-03-09", "2024-03-10", "2024-03-12"))
+)
+
+linelist |>
+  mutate(week = floor_date(onset, "week")) |>
+  count(week) |>
+  ggplot(aes(x = week, y = n)) +
+  geom_col()
+```
+
+## Challenges
+
+### Challenge: make your insight!
+
+Pick **two NHANES variables** and make a plot you would be happy to show a colleague:
+
+- a sensible geom for the variable types
+- a title and clear axis labels
+- one extra aesthetic (colour or facet)
+- **one sentence** under the plot saying what it shows
+
+
+### Challenge: improve it
+- Reorder the levels of `Education` and plot it as a bar chart
+- Add `geom_smooth()` to the scatter plot of `Age` vs `BMI`
+- Change colours with `scale_fill_brewer()` or `scale_colour_viridis_d()`
+
+
+I can only recommend to have a look at least once at this: [https://apreshill.github.io/ohsu-biodatavis/slides.html](https://apreshill.github.io/ohsu-biodatavis/slides.html)
+
+
+## The `gapminder` dataset
+
+<!-- check the video ID before class -->
+
+{{< video https://www.youtube.com/watch?v=hVimVzgtD6w height="500" width="900">}}
+
+*Hans Rosling, TED 2006*
+
+## The `gapminder` data, in R
+
+```{r}
+#| eval: true
+
+library("gapminder")
+glimpse(gapminder)
+
+gapminder |>
+  filter(year == 2007) |>
+  count(continent)
+```
+
+## One year, three variables
+
+```{r}
+#| eval: true
+gapminder |>
+  filter(year == 2007) |>
+  ggplot(aes(x = gdpPercap, y = lifeExp)) +
+  geom_point()
+```
+
+## Make it readable: log scale
+
+```{r}
+#| eval: true
+gapminder |>
+  filter(year == 2007) |>
+  ggplot(aes(x = gdpPercap, y = lifeExp)) +
+  geom_point() +
+  scale_x_log10()
+```
+
+## Using more: colour and size
+
+Let's see more than in just two dimensions! - `aes()` FTW!
+
+```{r}
+#| eval: true
+gapminder |>
+  filter(year == 2007) |>
+  ggplot(aes(x = gdpPercap, y = lifeExp,
+             colour = continent, size = pop)) +
+  geom_point(alpha = 0.7) +
+  scale_x_log10() +
+  labs(x = "GDP per capita (log scale)", y = "Life expectancy (years)")
+```
+
+## Let's add time to the picture!
+
+```{r}
+#| eval: true
+# static version: one panel per year
+gapminder |>
+  filter(year %in% c(1952, 1977, 2007)) |>
+  ggplot(aes(x = gdpPercap, y = lifeExp, colour = continent, size = pop)) +
+  geom_point(alpha = 0.7) +
+  scale_x_log10() +
+  facet_wrap(~ year) -> p
+p
+```
+
+## Let's make that interactive!
+
+```{r}
+#| eval: true
+plotly::ggplotly(p)
+```
+
+## Here's a live version!
+
+```{r}
+#| eval: true
+library("gganimate")
+
+anim <- gapminder |>
+  ggplot(aes(x = gdpPercap, 
+             y = lifeExp, 
+             colour = continent, 
+             size = pop)) +
+  geom_point(alpha = 0.7) +
+  scale_x_log10() +
+  theme_bw() + 
+  labs(title = "Year: {frame_time}", x = "GDP per capita", y = "Life expectancy") +
+  transition_time(year) + 
+  ease_aes('linear')
+```
+
+The last lines are the relevant portions - can you guess what will happen?
+
+## Here's a live version!
+
+```{r}
+#| eval: true
+anim
+
+# anim_save("gapminder.gif", animate(anim, width = 800, height = 500))
+```
+
+# Wrap-up
+
+## What you can do now
+
+
+- Read, clean, transform, and combine data
+- Look at it with plots
+- Put it all in a document that renders from top to bottom
+
+
+## Some good resources
+
+* "From data to viz" - [https://www.data-to-viz.com/](https://www.data-to-viz.com/)
+
+* The R graph gallery - [https://r-graph-gallery.com/](https://r-graph-gallery.com/)
+
+* Actually, many good resources out there!
+  - I'm a fanboy - check out the work of Nadieh Bremer, Nicola Rennie, Nathan Yau, Tamara Münzner, ...
+
+
+
+# Session Information {-}
+
+This document has been generated with...
+
+```{r}
+sessionInfo()
+```
+
+<!-- # References {-} -->
