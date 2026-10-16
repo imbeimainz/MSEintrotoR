@@ -1,0 +1,714 @@
+---
+title: >
+  Introduction to R - Working with real data
+subtitle: >
+  MSE Core Module 1.1
+author:
+- name: Federico Marini
+  affiliation: 
+  - Institute of Medical Biostatistics, Epidemiology and Informatics (IMBEI), Mainz, Germany
+  email: marinif@uni-mainz.de
+  orcid: 0000-0003-3252-7758 # edit as needed
+## add here more authors if needed - and do add the affiliation(s)
+date: "2026-10-16"
+date-format: long
+format: 
+  revealjs:
+    theme: 
+    - default
+    - ummz_reveal_theme.scss
+    embed-resources: true
+    mainfont: "Atkinson Hyperlegible"
+    # mainfont: "IBM Plex Sans"
+    ## making links automatically open in a new window 
+    link-external-newwindow: true
+    incremental: false
+    # incremental: true
+    footer: "MSE CM 1.1 - Introduction to R"
+    slide-number: c/t
+    smaller: true
+execute:
+  echo: true
+---
+
+# Previously on these screens
+
+* Penguins!
+* Some basic-but-real data processing
+* Paths, files, projects
+* I/O, done right
+
+
+# Real data!
+
+## Required packages
+
+We are going to need these packages
+
+```{r}
+library("dplyr")
+library("janitor")
+library("NHANES")
+library("readxl")
+library("writexl")
+library("haven")
+```
+
+## The NHANES dataset
+
+**N**ational **H**ealth and **N**utrition **E**xamination **S**urvey
+
+https://wwwn.cdc.gov/nchs/nhanes/
+
+::: {.fragment}
+::: {.incremental}
+- Run by the US **CDC** (National Center for Health Statistics)
+- Runs in **2-year cycles** (continuously since 1999, earlier surveys since the 1960s)
+- About **5,000 people per year**, selected to represent the US population
+- Three data sources per person:
+  - **Interview**: demographics, smoking, diet, health history
+  - **Physical exam**: BMI, blood pressure
+  - **Laboratory tests**: HbA1c, cholesterol, ...
+- Data are public, split into **many files per cycle**, linked by the ID `SEQN`
+:::
+:::
+
+## NHANES, in this course
+
+::: {.fragment}
+- We will use the `NHANES` **package**: cycles **2009-10 and 2011-12**, about 10,000 rows, 77 variables, already cleaned
+- We will retrieve some **CDC files** (SAS `.XPT`): one file per topic, with the cycle as a letter suffix (`_F` = 2009-10, `_G` = 2011-12)
+- Same people, two sources: this is why we will **join** these together
+:::
+
+::: {.fragment}
+::: {.callout-note}
+The real survey uses a complex sampling design with **survey weights**. The package data were resampled to mimic the US population, so we can skip the weights here. That is fine for learning but not for real inference. 
+:::
+
+(Yes, survey weights, that would be a whole course of its own and I am a bioinformatician)
+:::
+
+# A powerful hammer for many nails
+
+## Meet `dplyr`
+
+`dplyr` is one of the main packages of the so called `tidyverse` 
+
+::: {.fragment}
+The functions in `dplyr` are also called verbs
+:::
+
+::: {.fragment}
+Each verb does **one thing**, takes a data frame, and returns a data frame. 
+That is why you can chain them together nicely with `|>`
+:::
+
+::: {.fragment}
+Yes, most of the operations can very well be done with base-R, but this flavour is sometimes well rooted in how one thinks data analysis
+:::
+
+## The verbs of `dplyr`
+
+::: {.incremental}
+::: {style="font-size: 0.8em;"}
+* Acting on **Rows**
+  - `filter()` - keep rows that meet a condition 
+  - `arrange()` - sort rows 
+  - `distinct()` - remove duplicate rows 
+* Acting on **Columns** 
+  - `select()` - keep, drop or reorder columns
+  - `rename()` - change column names
+  - `mutate()` - create or change columns
+* Acting on **Groups** 
+  - `group_by()` + `summarise()` - one summary row per group
+  - `count()` - shortcut: how many rows per group
+* Acting on **Tables** 
+  - `left_join()` - add columns from another table 
+  - `bind_rows()` - stack tables on top of each other 
+:::
+:::
+
+## An example of dplyr
+
+::: {.fragment}
+```{r}
+#| eval: false
+NHANES |>
+  filter(Age >= 18) |>                       # rows
+  mutate(obese = BMI >= 30) |>               # columns
+  group_by(Sex) |>                           # groups
+  summarise(prop_obese = mean(obese, na.rm = TRUE))
+```
+:::
+
+::: {.fragment}
+*Read it as a sentence: "take the data, **then** keep adults, **then** add a column, **then** ..."*
+
+What will we obtain here?
+:::
+<!-- If you remember only five: filter, select, mutate, group_by plus summarise, and left_join. The other verbs are variations on these. -->
+
+::: {.fragment}
+Official dplyr (and more) cheat sheet: https://rstudio.github.io/cheatsheets/
+:::
+
+# Our guiding question
+
+## What is the prevalence of diabetes by BMI category, and how does it compare with HbA1c?
+
+::: {.fragment}
+Let's think out loud, what will we need?
+:::
+
+::: {.fragment}
+Where can we check what we have in the `NHANES` data?
+:::
+
+::: {.fragment}
+Do we have everything we need? Do we need to retrieve some additional data?
+:::
+
+# 1. Read, view, assess
+
+## R object: the NHANES package
+
+Load the package and the dataset itself, and have a first glance at that
+
+```{r}
+#| eval: false
+library("NHANES")
+data(NHANES)
+head(NHANES)
+glimpse(NHANES)
+```
+
+::: {.fragment}
+Can you spot out one important thing? How can that be so?
+
+Is that the same in the `NHANESraw`?
+:::
+
+## Which variables would you pick?
+
+Which few variables would you pick to describe a population (always remember the purpose we had!)
+
+::: {.fragment}
+I know I told you to use meaningful names, pardon me on this...
+
+```{r}
+nh <- NHANES |>
+  select(ID, SurveyYr, Gender, Age, BMI, Diabetes, BPSys1, BPDia1, Smoke100)
+```
+:::
+
+::: {.fragment}
+(Yes, we took a few more, but this is ok)
+:::
+
+## Let's take a round trip - with Excel
+
+Exporting & reimporting... What can possibly go wrong there
+
+```{r}
+#| eval: false
+write_xlsx(nh, "datasets/nhanes_small.xlsx")
+file.exists("datasets/nhanes_small.xlsx")
+
+nh_xl <- read_excel("datasets/nhanes_small.xlsx")
+identical(nh, nh_xl)    
+# all.equal(nh, nh_xl)
+glimpse(nh)
+glimpse(nh_xl)              
+```
+
+<!-- why FALSE? (tibble vs. factors vs. chr) -->
+<!-- what happened to the factors? -->
+
+## A quick assessment
+
+::: {.fragment}
+Using these functions will never kill a kitten
+
+```{r}
+#| results: false
+dim(nh)
+
+summary(nh)
+
+colSums(is.na(nh))
+
+nh |> summarise(across(everything(), n_distinct))
+```
+:::
+
+::: {.fragment}
+Don't be afraid to put extra check on your data, even if it seems not too useful
+:::
+
+# 2. Subsetting data
+
+## Selecting variables
+
+Can you guess what these commands will return?
+
+::: {.fragment}
+```{r}
+#| eval: false
+nh |> select(Age, BMI)
+nh |> select(-SurveyYr)
+nh |> select(starts_with("BP"))
+```
+:::
+
+## Selecting cases & performing logical comparisons
+
+What are these commands returning?
+
+::: {.fragment}
+```{r}
+#| eval: false
+nh |> filter(Age >= 18)
+nh |> filter(Age >= 18, Gender == "female")
+nh |> filter(Smoke100 == "Yes" | Diabetes == "Yes")
+nh |> filter(SurveyYr %in% c("2009_10", "2011_12"))
+```
+:::
+
+## Predict first: how many rows?
+
+```{r}
+#| eval: false
+nrow(nh)
+nrow(filter(nh, BMI > 30))
+nrow(filter(nh, BMI <= 30))
+nrow(filter(nh, BMI > 30)) + nrow(filter(nh, BMI <= 30))   # vs nrow(nh)?
+```
+
+What is the missing piece?
+
+::: {.fragment}
+```{r}
+#| eval: false
+sum(is.na(nh$BMI))    # the missing piece
+```
+:::
+
+# 3. Handling duplicates
+
+## Is `ID` unique?
+
+::: {.fragment}
+Nope
+:::
+
+::: {.fragment}
+```{r}
+#| eval: false
+
+head(nh)
+nrow(nh)
+n_distinct(nh$ID)
+
+nh |> count(ID) |> filter(n > 1)
+nh |> get_dupes(ID)
+```
+:::
+
+## Remove duplicates
+
+::: {.fragment}
+There's many ways to do so, here's one
+:::
+
+::: {.fragment}
+```{r}
+nh_u <- nh |> 
+  distinct(ID, .keep_all = TRUE)   # will keep first row per ID
+nrow(nh_u)
+
+nh |> 
+  distinct() |>                    # fully identical rows only
+  nrow()
+```
+:::
+
+# 4. Sorting data
+
+## Sorting cases
+
+Again - what happens here?
+
+::: {.fragment}
+```{r}
+#| eval: false
+nh_u |> arrange(Age)
+nh_u |> arrange(desc(BMI))
+nh_u |> arrange(Gender, desc(Age))
+```
+:::
+
+## Sorting variables
+
+::: {.fragment}
+... and here?
+
+```{r}
+#| eval: false
+nh_u |> relocate(BMI, .after = Age)
+nh_u |> select(Age, everything())
+```
+:::
+
+::: {.fragment}
+Much of this is quite intuitive, but the verbs and functions make it pretty straightforward to work with data...
+:::
+
+# 5. Transforming data
+
+## Renaming variables
+
+Sometimes it is for comfort, some other for readability...
+
+```{r}
+#| eval: true
+nh_u <- nh_u |> rename(sex = Gender, survey_year = SurveyYr)
+```
+
+## Recoding variables & categorizing
+
+Mixing the flavours we have seen already for the `penguins`...
+
+::: {.fragment}
+```{r}
+#| eval: true
+nh_u <- nh_u |>
+  mutate(
+    bmi_class = case_when(
+      BMI < 18.5 ~ "underweight",
+      BMI < 25   ~ "normal",
+      BMI < 30   ~ "overweight",
+      BMI >= 30  ~ "obese"
+    ),
+    age_group = cut(Age, breaks = c(0, 18, 40, 60, Inf), right = FALSE)
+  )
+
+count(nh_u, bmi_class)
+count(nh_u, age_group)
+```
+:::
+
+## Calculate new variables from old
+
+One can do pretty much everything
+
+::: {.fragment}
+Meaningful things come first, let's put it like this - can we get for example the mean arterial pressure? How is that computed?
+:::
+
+::: {.fragment}
+```{r}
+#| eval: true
+nh_u <- nh_u |>
+  mutate(map_bp = BPDia1 + (BPSys1 - BPDia1) / 3)   # mean arterial pressure
+
+summary(nh_u$map_bp)
+```
+:::
+
+<!-- ## Wide <-> long -->
+
+<!-- skip: pointer back to the chapter 3 challenge -->
+
+# 6. Group-by operations
+
+## Frequency table with proportions
+
+One step at a time, we are getting close!
+
+::: {.fragment}
+```{r}
+#| eval: true
+
+nh_u |>
+  count(bmi_class) 
+
+nh_u |>
+  count(bmi_class) |>
+  mutate(prop = n / sum(n))
+```
+:::
+
+## Let's go back to the basics
+
+Just briefly
+
+::: {.fragment}
+```{r}
+#| eval: true
+# nh_u$Diabetes == "Yes"
+
+sum(nh_u$Diabetes == "Yes")
+
+sum(nh_u$Diabetes == "Yes", na.rm = TRUE)
+
+sum(is.na(nh_u$Diabetes))
+
+nrow(nh_u)
+
+## doing it by hand a bit
+552/(6779-126)
+
+# or use this
+mean(nh_u$Diabetes == "Yes", na.rm = TRUE)
+```
+:::
+
+## Wait a second!
+
+We have all we need to answer our guiding question!
+
+::: {.fragment}
+```{r}
+#| eval: false
+nh_u |>
+  group_by(bmi_class) |>
+  summarise(
+    n = n(),
+    diabetes = mean(Diabetes == "Yes", na.rm = TRUE)
+  )
+
+# what happens without na.rm = TRUE ?
+nh_u |>
+  group_by(bmi_class) |>
+  summarise(
+    n = n(),
+    diabetes = mean(Diabetes == "Yes"))
+```
+:::
+
+## Stepping up the challenge
+
+::: {.fragment}
+What if we have two grouping variables?
+
+Let's do this by `age_group` AND `bmi_class`!
+:::
+
+::: {.fragment}
+```{r}
+nh_u |>
+  group_by(age_group, bmi_class) |>
+  summarise(
+    n = n(), 
+    diabetes = mean(Diabetes == "Yes", na.rm = TRUE)
+  )
+```
+:::
+
+# 7. Combining data sets
+
+## Getting data from the NHANES website 
+
+We need data from https://wwwn.cdc.gov/Nchs/Nhanes/ - for both time points!
+
+::: {.fragment}
+Go to https://wwwn.cdc.gov/Nchs/Nhanes/continuousnhanes/default.aspx?BeginYear=2009
+
+-> Laboratory Data -> Search for Glycohemoglobin -> Copy the link to that
+:::
+
+::: {.fragment}
+```{r}
+#| eval: false
+
+# check the URLs on the CDC site before class: they have moved in the past
+
+url_f <- "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2009/DataFiles/GHB_F.xpt"
+download.file(url_f, destfile = "datasets/GHB_F.XPT")
+
+url_g <- "https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2011/DataFiles/GHB_G.XPT"
+download.file(url_g, destfile = "datasets/GHB_G.XPT")
+```
+:::
+
+## Reading SAS transport files
+
+::: {.fragment}
+Yep, just like that
+
+```{r}
+ghb_f <- haven::read_xpt("datasets/GHB_F.XPT")    # 2009-10
+ghb_g <- haven::read_xpt("datasets/GHB_G.XPT")    # 2011-12
+
+glimpse(ghb_g)
+glimpse(ghb_f)
+```
+:::
+
+## Adding more rows
+
+::: {.fragment}
+Combining together the two datasets from the different periods
+
+```{r}
+#| eval: true
+dim(ghb_f)
+dim(ghb_g)
+
+ghb <- bind_rows(ghb_f, ghb_g)
+dim(ghb) # does the arithmetic work?
+
+n_distinct(ghb$SEQN)
+```
+:::
+
+::: {.fragment}
+Of course, some obligatory checks are expected BEFORE doing this
+:::
+
+## Adding more columns: join!
+
+We want to keep all observation in our `nh_u`
+
+::: {.fragment}
+```{r}
+#| eval: true
+nrow(nh_u)
+
+nh_ghb <- nh_u |>
+  left_join(ghb, by = join_by(ID == SEQN))
+
+nrow(nh_ghb) # Is this the same as before? always check!
+```
+:::
+
+::: {.fragment}
+We could have also used an `inner_join()` (keeps observations from x that have a matching key in y)
+:::
+
+## Who did not match?
+
+Can be just out of curiosity...
+
+```{r}
+#| eval: true
+nh_u |> 
+  anti_join(ghb, by = join_by(ID == SEQN)) |> nrow()
+ghb |> 
+  anti_join(nh_u, by = join_by(SEQN == ID)) |> nrow()
+
+nh_ghb |> 
+  summarise(missing_hba1c = sum(is.na(LBXGH)))
+
+# equivalent to...
+nh_ghb$LBXGH |> is.na() |> sum()
+```
+
+Can you spot what is different?
+
+## Do the HbA1c value make sense?
+
+Here comes the other half of the guiding question!
+
+::: {.fragment}
+```{r}
+#| eval: true
+nh_ghb |>
+  group_by(Diabetes) |>
+  summarise(n = n(), mean_hba1c = mean(LBXGH, na.rm = TRUE))
+```
+:::
+
+::: {.fragment}
+Can you tell me in **one sentence** what you have found with your results?
+:::
+
+## Joining is powerful
+
+But sometimes it can bite you (one-to-many)
+
+::: {.fragment}
+```{r}
+#| eval: true
+patients <- tibble(id = 1:3, name = c("A", "B", "C"))
+visits   <- tibble(id = c(1, 1, 2), date = c("2024-01-05", "2024-02-10", "2024-01-20"))
+
+left_join(patients, visits, by = "id")   # 3 patients in, 4 rows out
+```
+:::
+
+# 8. Saving data
+
+## Saving as R objects and as plain text
+
+::: {.fragment}
+This goes pretty straightforward
+
+```{r}
+#| eval: true
+saveRDS(nh_ghb, "datasets/nhanes_ghb.RDS")
+readr::write_csv(nh_ghb, "datasets/nhanes_ghb.csv")
+
+# Excel was already done in part 1
+list.files("datasets")
+```
+:::
+
+::: {.fragment}
+Side note: You might notice that sometimes I do not type the arguments of a functions.
+
+There is NEVER harm in typing them extra (the positional arguments sometimes can give you unexpected behaviors)
+:::
+
+## I have to make a confession
+
+::: {.fragment}
+I had a very hard time, all the way through this, to NOT plot in some way the data we have been working with
+:::
+
+::: {.fragment}
+A picture is worth a thousand words --> "A plot is worth a thousand rows/columns"
+
+How many dimensions could we visualize in a plot on a screen?
+:::
+
+::: {.fragment}
+```{r}
+#| eval: false
+nh_ghb |>
+  group_by(Diabetes) |>
+  summarise(n = n(), mean_hba1c = mean(LBXGH, na.rm = TRUE))
+
+library("ggplot2")
+ggplot(nh_ghb,
+       aes(x = Diabetes, y = LBXGH)) + geom_jitter()
+```
+
+Do you see what I see?
+:::
+
+## Some extra challenges
+
+::: {.callout-tip title="Challenge: Come up with your own/new question"}
+* Answer the same question, but restrict to only one time window
+* Take another guiding question
+  - Is sleep related to BMI?
+  - Does physical activity go with a lower diabetes prevalence?	
+  - Is smoking related to blood pressure, by age group?
+* Grab the health insurance status information (HIQ)
+  - Is health insurance related to income and age?
+* Come up with your own new question and address that!
+
+For each of these cases, write **one sentence** under your result that states what you found.
+:::
+
+# What comes next?
+
+We will look into some special cases (factors, missing values, dates)
+
+::: {.fragment}
+**Questions** on this, first?
+
+**Thank you for your attention!**
+:::

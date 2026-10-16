@@ -1,0 +1,411 @@
+---
+title: >
+  Introduction to R - Data types
+subtitle: >
+  MSE Core Module 1.1
+author:
+- name: Federico Marini
+  affiliation: 
+  - Institute of Medical Biostatistics, Epidemiology and Informatics (IMBEI), Mainz, Germany
+  email: marinif@uni-mainz.de
+  orcid: 0000-0003-3252-7758 # edit as needed
+## add here more authors if needed - and do add the affiliation(s)
+date: "2026-10-16"
+date-format: long
+format: 
+  revealjs:
+    theme: 
+    - default
+    - ummz_reveal_theme.scss
+    embed-resources: true
+    mainfont: "Atkinson Hyperlegible"
+    # mainfont: "IBM Plex Sans"
+    ## making links automatically open in a new window 
+    link-external-newwindow: true
+    incremental: false
+    # incremental: true
+    footer: "MSE CM 1.1 - Introduction to R"
+    slide-number: c/t
+    smaller: true
+execute:
+  echo: true
+---
+
+# Previously on these screens
+
+* The NHANES dataset: welcome to the real deal
+* Inspecting, assessing, cleaning data
+* Processing and transforming data
+* Combining datasets
+
+
+## There are data types
+
+::: {.fragment}
+Some of them, we already encountered - and some of them are... a bit special
+
+::: {.incremental}
+* Numbers
+* Strings
+* Factors
+* Dates
+* Missing (yep, a missing info can also be/become an information)
+:::
+:::
+
+::: {.fragment}
+We have been working with our `nh_ghb` dataset, let's reload it into our session
+
+```{r}
+library("NHANES")
+library("dplyr")
+
+# checkpoint from chapter 4
+nh_ghb <- readRDS("datasets/nhanes_ghb.RDS")
+```
+:::
+
+# 1. Factors
+
+## Text vs. categories
+
+Let's have a closer look, with a specific focus on this!
+
+::: {.fragment}
+```{r}
+#| eval: false
+class(nh_ghb$bmi_class)   
+unique(nh_ghb$bmi_class)
+class(nh_ghb$Diabetes)    
+levels(nh_ghb$Diabetes)
+
+unclass(nh_ghb$Diabetes)
+
+table(nh_ghb$bmi_class)
+table(nh_ghb$bmi_class, useNA = "always")
+```
+
+What order is this? is it meaningful?
+
+<!-- Callback to chapter 3: `case_when()` gave us "heavy, light, medium". Alphabetical, not logical. -->
+:::
+
+## Levels have an order
+
+... and it can be related to a meaning
+
+```{r}
+#| eval: true
+levels(NHANES$Education)
+levels(NHANES$AgeDecade)       # Can you spot anything odd in the labels?
+
+table(NHANES$Education)
+## or 
+NHANES |> 
+  count(Education)
+```
+
+::: {.fragment}
+The "information content" is the same, the behavior/format sometimes is not. Where do you find all this info on functions?
+:::
+
+## Set the order yourself
+
+Let's fix the `bmi_class`
+
+::: {.fragment}
+```{r}
+#| eval: true
+nh_ghb <- nh_ghb |>
+  mutate(
+    bmi_class = factor(bmi_class,
+                       levels = c("underweight", "normal", "overweight", "obese"))
+  )
+
+levels(nh_ghb$bmi_class)
+count(nh_ghb, bmi_class)           # now the table reads in a meaningful order
+```
+:::
+
+::: {.fragment}
+What happened to our `NA`s?
+
+For more factor-centric functions, you can have a look at the `forcats` package (yes, this is an intentional anagram of `factors`).
+:::
+
+## Why bother? 
+
+::: {.fragment}
+Well, because the order shows up also in plots
+:::
+
+::: {.fragment}
+```{r}
+#| eval: true
+#| echo: false
+
+library("ggplot2")
+
+nh_ghb |>
+  # drop_na(bmi_class) |>
+  count(bmi_class) |>
+  ggplot(aes(x = bmi_class, y = n)) +
+  geom_col()
+```
+:::
+
+# 2. Missing values
+
+## `NA` is "unknown"
+
+::: {.fragment}
+It is not zero!
+:::
+
+::: {.fragment}
+Back to some basics:
+
+```{r}
+#| eval: true
+x <- c(120, 135, NA, 110)
+mean(x)
+mean(x, na.rm = TRUE)
+is.na(x)
+sum(is.na(x))
+```
+:::
+
+## How much is missing, and where?
+
+This is quite a useful overview (kind of applies to any rectangular data...)
+
+::: {.fragment}
+```{r}
+#| eval: true
+nh_ghb |>
+  summarise(across(everything(), ~ sum(is.na(.x)))) |>
+  t()
+```
+:::
+
+::: {.fragment}
+What does `t()` do in here?
+:::
+
+## Back to blood pressure
+
+How many/much is missing?
+
+```{r}
+#| eval: true
+sum(is.na(nh_ghb$BPSys1))
+mean(is.na(nh_ghb$BPSys1))         # proportion missing
+```
+
+::: {.fragment}
+*Who is missing? Make a guess before you look.*
+:::
+
+## Is it random?
+
+Let's have a look
+
+::: {.fragment}
+```{r}
+#| eval: true
+nh_ghb |>
+  mutate(bp_missing = is.na(BPSys1)) |>
+  group_by(age_group) |>
+  summarise(n = n(), prop_missing = mean(bp_missing))
+```
+:::
+
+::: {.fragment}
+In this case, the info is missing by **design** (children not measured), not by accident. 
+
+You can check it with `range(nh_ghb$Age[!is.na(nh_ghb$BPSys1)])`.
+:::
+
+## Three ways to deal with NAs
+
+Run these commands sequentially, and see what comes out
+
+```{r}
+#| eval: false
+# 1. ignore inside the function
+nh_ghb |> 
+  summarise(mean_sbp = mean(BPSys1, na.rm = TRUE),
+            n = n())
+
+# 2. drop rows with NA in one variable
+nh_ghb |> 
+  drop_na(BPSys1) |> 
+  summarise(mean_sbp = mean(BPSys1), 
+            n = n())
+
+# 3. filter explicitly
+nh_ghb |> 
+  filter(!is.na(BPSys1)) |> 
+  summarise(mean_sbp = mean(BPSys1), 
+            n = n())
+```
+
+::: {.fragment}
+::: {.callout-warning}
+`drop_na()` without column names drops rows with **any** NA. 
+
+Check `nrow()` before and after. Which one is the right choice is an explicit **analytic decision**, not just a technicality!
+:::
+:::
+
+## Does it matter for the answer?
+
+::: {.fragment}
+This is a rhetorical question...
+
+```{r}
+#| eval: false
+
+# all ages vs. adults only
+nh_ghb |> 
+  summarise(mean_sbp = mean(BPSys1, na.rm = TRUE))
+## vs
+nh_ghb |> 
+  filter(Age >= 18) |> 
+  summarise(mean_sbp = mean(BPSys1, na.rm = TRUE))
+```
+:::
+
+::: {.fragment}
+::: {.callout-tip title="Challenge"}
+Among adults, is `BPSys1` missing more often in one sex or one age group? Or one BMI class? Use `is.na()` inside `group_by() |> summarise()`.
+:::
+
+More on missing data might come in a later session!
+:::
+
+# 3. Dates
+
+## Dates arrive as text
+
+::: {.fragment}
+... and in many cases you have to hope they are formatted right!
+:::
+
+::: {.fragment}
+```{r}
+#| eval: true
+linelist <- data.frame(
+  id     = 1:6,
+  onset  = c("2024-03-01", "2024-03-02", "2024-03-05",
+             "2024-03-09", "2024-03-10", "2024-03-12"),
+  report = c("2024-03-04", "2024-03-05", "2024-03-07",
+             "2024-03-12", "2024-03-15", "2024-03-14")
+)
+
+glimpse(linelist)
+```
+:::
+
+::: {.fragment}
+R does not know these are dates (yet) - Your best friend, possibly: `lubridate` (yes, package developers often like word puns)
+:::
+
+## Parse them
+
+This is - of course - just an appetizer
+
+::: {.fragment}
+```{r}
+#| eval: true
+#| output-location: fragment
+
+library("lubridate")
+linelist <- linelist |>
+  mutate(onset = ymd(onset), 
+         report = ymd(report))
+
+glimpse(linelist)
+
+dmy("01/03/2024")              # other orders: dmy(), mdy()
+ymd("2024-13-45")              # what happens with impossible dates?
+```
+:::
+
+## Compute with dates
+
+Keeping it simple here...
+
+::: {.fragment}
+```{r}
+#| eval: true
+linelist |>
+  mutate(delay = report - onset)               # a time difference
+
+linelist |>
+  mutate(delay_days = as.numeric(report - onset)) |>
+  summarise(mean_delay = mean(delay_days))
+```
+
+... but you can see that some simple functions make this quite easy!
+:::
+
+## From dates to weeks
+
+There are clever ways of converting among units!
+
+::: {.fragment}
+```{r}
+#| eval: true
+linelist |>
+  mutate(week = floor_date(onset, unit = "week")) 
+```
+:::
+
+::: {.fragment}
+```{r}
+#| eval: true
+#| echo: false
+linelist |>
+  mutate(week = floor_date(onset, unit = "week")) |>
+  count(week) |>
+  ggplot(aes(x = week, y = n)) +
+  geom_col()
+```
+:::
+
+::: {.fragment}
+::: {.callout-note}
+NHANES has no calendar dates, but outbreak data will be full of them.
+:::
+:::
+
+<!-- ::: {.callout-tip title="Challenge"} -->
+<!-- Make a `month` column with `floor_date(unit = "month")`, or extract `month(onset, label = TRUE)` and `wday(onset, label = TRUE)`. -->
+<!-- ::: -->
+
+# Recap
+
+## Develop (at least) these habits
+
+::: {.incremental}
+* Check the **type** of every column (`glimpse()` or `summary()` can be your very good friends)
+* Set the **order** of categories on purpose
+* Ask **why** something is missing before dealing with it
+:::
+
+::: {.fragment}
+You are the one wanting to become an epidemiologist, right?
+
+Always remember: to get the right answer, start asking the right question(s) - and don't be afraid to ask questions.
+:::
+
+# What comes next?
+
+We will have a relaxed dive into data visualization (using `ggplot2`)
+
+::: {.fragment}
+**Questions** on this, first?
+
+**Thank you for your attention!**
+:::

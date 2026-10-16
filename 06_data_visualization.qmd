@@ -1,0 +1,559 @@
+---
+title: >
+  Introduction to R - Data visualization 101
+subtitle: >
+  MSE Core Module 1.1
+author:
+- name: Federico Marini
+  affiliation: 
+  - Institute of Medical Biostatistics, Epidemiology and Informatics (IMBEI), Mainz, Germany
+  email: marinif@uni-mainz.de
+  orcid: 0000-0003-3252-7758 # edit as needed
+## add here more authors if needed - and do add the affiliation(s)
+date: "2026-10-16"
+date-format: long
+format: 
+  revealjs:
+    theme: 
+    - default
+    - ummz_reveal_theme.scss
+    embed-resources: true
+    mainfont: "Atkinson Hyperlegible"
+    # mainfont: "IBM Plex Sans"
+    ## making links automatically open in a new window 
+    link-external-newwindow: true
+    incremental: false
+    # incremental: true
+    footer: "MSE CM 1.1 - Introduction to R"
+    slide-number: c/t
+    smaller: true
+execute:
+  echo: true
+---
+
+
+# Previously on these screens
+
+* Factors, missing data, dates!
+* Some good habits to have
+* A constant suggestion to inspect and view your data
+
+## Let's get all set for this chapter!
+
+```{r}
+library("dplyr")
+library("tidyr")
+library("gapminder")
+library("ggplot2")
+
+# checkpoint from chapter 4, with the factor order from chapter 5
+nh <- readRDS("datasets/nhanes_ghb.RDS") |>
+  mutate(bmi_class = factor(bmi_class,
+                            levels = c("underweight", "normal", "overweight", "obese")))
+```
+
+::: {.fragment}
+Who of you has used R already to plot something? What did you use?
+:::
+
+::: {.fragment}
+Yes, R has a lot of possibilities to plot and visualize data!
+
+Base R has the almighty `plot()` function, which you might have already started loving & hating
+
+I am giving you a gentle introduction to the `gg` - the Grammar of Graphics
+:::
+
+# 1. ggplot basics
+
+## The grammar: a plot is built from layers
+
+::: {.fragment}
+```{r}
+#| eval: false
+ggplot(data = nh, mapping = aes(x = Age, y = BMI)) +
+  geom_point()
+```
+:::
+
+::: {.fragment}
+::: {.incremental}
+- **data**: which table
+- **aes()**: which columns go where (x, y, colour, size, ...)
+- **geom_...()**: how to draw them (points, bars, boxes, ...)
+- layers are added with `+`
+:::
+:::
+
+::: {.fragment}
+Something inside `aes()` will be mapped to the data, outside of it will be treated as a constant
+
+What `aes`thetics can you think of right now?
+:::
+
+
+## Start empty, add layer by layer
+
+```{r}
+#| eval: false
+ggplot(nh)                            # nothing to see
+ggplot(nh, aes(x = Age, y = BMI))     # axes appear, no data drawn (data "limits" are known)
+ggplot(nh, aes(x = Age, y = BMI)) + geom_point()
+```
+
+::: {.fragment}
+```{r}
+#| echo: false
+ggplot(nh, aes(x = Age, y = BMI)) + geom_point()
+```
+:::
+
+## One variable: histogram
+
+```{r}
+#| eval: false
+ggplot(nh, aes(x = BMI)) +
+  geom_histogram(bins = 30)
+
+ggplot(nh, aes(x = BMI)) +
+  geom_histogram(binwidth = 2)            
+```
+
+::: {.fragment}
+Does the shape change?
+
+What alternatives to the simple histogram do you know?
+:::
+
+<!-- density plots, ridge plots, rainfall plots, violin plots, sina plot -->
+
+## Two variables: scatter plot
+
+In this case, two continuous variables
+
+::: {.fragment}
+Why am I using alpha? Try without that!
+:::
+
+::: {.fragment}
+```{r}
+#| eval: true
+ggplot(nh, aes(x = Age, y = BMI)) +
+  geom_point(alpha = 0.2)                    
+```
+:::
+
+
+## Add more aesthetics
+
+::: {.fragment}
+Look at the placement of the `colour`:
+
+```{r}
+#| eval: false
+ggplot(nh, aes(x = Age, y = BMI, colour = sex)) +
+  geom_point(alpha = 0.3)
+
+ggplot(nh, aes(x = Age, y = BMI)) +
+  geom_point(colour = "steelblue", alpha = 0.3)
+```
+:::
+
+::: {.fragment}
+What changed?
+:::
+
+<!-- inside aes() = mapped to data, outside = fixed value -->
+
+## Facets: one panel per group
+
+You'll probably learn to love small multiples
+
+::: {.fragment}
+```{r}
+#| eval: true
+ggplot(nh, aes(x = BMI)) +
+  geom_histogram(bins = 30) +
+  facet_wrap(~ sex)
+```
+:::
+
+## Labels and themes
+
+::: {.fragment}
+Controlling the aspect of the side dishes is important as well!
+:::
+
+::: {.fragment}
+```{r}
+#| eval: true
+ggplot(nh, aes(x = BMI, fill = sex)) +
+  geom_histogram(bins = 30, alpha = 0.6, position = "identity") +
+  labs(title = "BMI distribution in NHANES",
+       x = "BMI (kg/m²)", y = "Number of participants",
+       fill = "Sex") +
+  theme_minimal()
+```
+:::
+
+::: {.fragment}
+Themes - an excellent and comfy way to change the looks of a plot. There are many collections of themes out there
+:::
+
+## Save that plot!
+
+::: {.fragment}
+Each plot done via `ggplot` is returned as an object (and printed)
+
+... and objects can be saved - how to do this efficiently?
+:::
+
+::: {.fragment}
+```{r}
+#| eval: false
+p <- ggplot(nh, aes(x = BMI)) + geom_histogram(bins = 30)
+p
+ggsave(p, filename = "bmi_hist.png", width = 6, height = 4, dpi = 300)
+```
+
+You can also use the RStudio interface, but I would heartily recommend *against* that.
+
+:::
+
+# 2. Previous chapters, now as plots
+
+## Chapter 3 flavour: distributions by group
+
+Let's have a look at the relationship between systolic blood pressure and smoking habits!
+
+::: {.fragment}
+```{r}
+#| eval: true
+nh |>
+  drop_na(BPSys1, Smoke100) |>
+  ggplot(aes(x = Smoke100, y = BPSys1)) +
+  geom_boxplot()
+```
+:::
+
+::: {.fragment}
+Is this a fair comparison? What did we forget about age (chapter 5)?
+:::
+
+## Adults only, split by age group
+
+::: {.fragment}
+We will use the facets here...
+:::
+
+::: {.fragment}
+Let's try here some other `geom_`s! 
+
+`geom_jitter()`, `geom_violin()`, `ggforce::geom_sina` are just some of my favourites
+:::
+
+::: {.fragment}
+```{r}
+#| eval: true
+nh |>
+  filter(Age >= 18) |>
+  drop_na(BPSys1, Smoke100) |>
+  ggplot(aes(x = Smoke100, y = BPSys1)) +
+  geom_boxplot() +
+  facet_wrap(~ age_group)
+```
+:::
+
+
+
+## Chapter 4: the guiding question
+
+::: {.fragment}
+Remember that? "What is the prevalence of diabetes by BMI category, and how does it compare with HbA1c?"
+:::
+
+::: {.fragment}
+```{r}
+#| eval: true
+nh |>
+  drop_na(bmi_class, Diabetes) |>
+  group_by(bmi_class) |>
+  summarise(prevalence = mean(Diabetes == "Yes")) |>
+  ggplot(aes(x = bmi_class, y = prevalence)) +
+  geom_col() +
+  labs(x = "BMI class", y = "Diabetes prevalence")
+```
+:::
+
+## ... by age group too
+
+::: {.fragment}
+Well, while we are at it...
+:::
+
+::: {.fragment}
+```{r}
+#| eval: true
+nh |>
+  drop_na(bmi_class, Diabetes, age_group) |>
+  group_by(age_group, bmi_class) |>
+  summarise(prevalence = mean(Diabetes == "Yes"), .groups = "drop") |>
+  ggplot(aes(x = bmi_class, y = prevalence, fill = age_group)) +
+  geom_col(position = "dodge")
+```
+:::
+
+## HbA1c vs. diabetes status
+
+::: {.fragment}
+The `geom_sina()` shows the density distribution AND individual observations
+:::
+
+::: {.fragment}
+*Does this make sense?*
+
+I know it sounds obvious and possibly naif - but don't you ever forget to ask this question, every now and then. And especially after generating a result ^_^
+:::
+
+::: {.fragment}
+```{r}
+#| eval: true
+nh |>
+  drop_na(LBXGH, Diabetes) |>
+  ggplot(aes(x = Diabetes, y = LBXGH)) +
+  ggforce::geom_sina() +
+  labs(y = "HbA1c (%)")
+```
+:::
+
+
+
+## Chapter 5: missing values
+
+::: {.fragment}
+Let's **see** the proportion of missing data
+:::
+
+::: {.fragment}
+One plot vs one table - who wins?
+
+Immediateness vs precision?
+:::
+
+::: {.fragment}
+```{r}
+#| eval: true
+nh |>
+  mutate(bp_missing = is.na(BPSys1)) |>
+  group_by(age_group) |>
+  summarise(prop_missing = mean(bp_missing)) |>
+  ggplot(aes(x = age_group, y = prop_missing)) +
+  geom_col()
+```
+:::
+
+## Chapter 5: the epi curve
+
+::: {.fragment}
+```{r}
+#| eval: true
+library("lubridate")
+linelist <- tibble(
+  id    = 1:6,
+  onset = ymd(c("2024-03-01", "2024-03-02", "2024-03-05",
+                "2024-03-09", "2024-03-10", "2024-03-12"))
+)
+
+linelist |>
+  mutate(week = floor_date(onset, "week")) |>
+  count(week) |>
+  ggplot(aes(x = week, y = n)) +
+  geom_col()
+```
+:::
+
+## Challenges {.smaller}
+
+::: {.fragment}
+::: {.callout-tip title="Challenge: create your own plot"}
+Pick **two NHANES variables** and make a plot you would be happy to show a colleague:
+
+- a sensible geom for the variable types
+- a title and clear axis labels
+- one extra aesthetic (colour or facet)
+- **one sentence** under the plot saying what it shows
+:::
+:::
+
+::: {.fragment}
+::: {.callout-tip title="Challenge: improve it"}
+- Reorder the levels of `Education` and plot it as a bar chart
+- Add `geom_smooth()` to the scatter plot of `Age` vs `BMI`
+- Change colours with `scale_fill_brewer()` or `scale_colour_viridis_d()`
+:::
+:::
+
+::: {.fragment}
+I can only recommend to have a look at least once at this: [https://apreshill.github.io/ohsu-biodatavis/slides.html](https://apreshill.github.io/ohsu-biodatavis/slides.html)
+:::
+
+# 3. A famous example: the `gapminder` dataset
+
+## Time to chillax a bit
+
+<!-- check the video ID before class -->
+
+{{< video https://www.youtube.com/watch?v=hVimVzgtD6w height="500" width="900">}}
+
+*Hans Rosling, TED 2006*
+
+## The `gapminder` data, in R
+
+::: {.fragment}
+```{r}
+#| eval: true
+
+library("gapminder")
+glimpse(gapminder)
+
+gapminder |>
+  filter(year == 2007) |>
+  count(continent)
+```
+:::
+
+## One year, three variables
+
+::: {.fragment}
+```{r}
+#| eval: true
+gapminder |>
+  filter(year == 2007) |>
+  ggplot(aes(x = gdpPercap, y = lifeExp)) +
+  geom_point()
+```
+:::
+
+## Make it readable: log scale
+
+::: {.fragment}
+```{r}
+#| eval: true
+gapminder |>
+  filter(year == 2007) |>
+  ggplot(aes(x = gdpPercap, y = lifeExp)) +
+  geom_point() +
+  scale_x_log10()
+```
+:::
+
+## Using more: colour and size
+
+Let's see more than in just two dimensions! - `aes()` FTW!
+
+::: {.fragment}
+```{r}
+#| eval: true
+gapminder |>
+  filter(year == 2007) |>
+  ggplot(aes(x = gdpPercap, y = lifeExp,
+             colour = continent, size = pop)) +
+  geom_point(alpha = 0.7) +
+  scale_x_log10() +
+  labs(x = "GDP per capita (log scale)", y = "Life expectancy (years)")
+```
+:::
+
+## Let's add time to the picture!
+
+::: {.fragment}
+```{r}
+#| eval: true
+# static version: one panel per year
+gapminder |>
+  filter(year %in% c(1952, 1977, 2007)) |>
+  ggplot(aes(x = gdpPercap, y = lifeExp, colour = continent, size = pop)) +
+  geom_point(alpha = 0.7) +
+  scale_x_log10() +
+  facet_wrap(~ year) -> p
+p
+```
+:::
+
+## Let's make that interactive!
+
+::: {.fragment}
+```{r}
+#| eval: true
+plotly::ggplotly(p)
+```
+:::
+
+## Here's a live version!
+
+::: {.fragment}
+```{r}
+#| eval: true
+library("gganimate")
+
+anim <- gapminder |>
+  ggplot(aes(x = gdpPercap, 
+             y = lifeExp, 
+             colour = continent, 
+             size = pop)) +
+  geom_point(alpha = 0.7) +
+  scale_x_log10() +
+  theme_bw() + 
+  labs(title = "Year: {frame_time}", x = "GDP per capita", y = "Life expectancy") +
+  transition_time(year) + 
+  ease_aes('linear')
+```
+:::
+
+::: {.fragment}
+The last lines are the relevant portions - can you guess what will happen?
+:::
+
+## Here's a live version!
+
+```{r}
+#| eval: true
+anim
+
+# anim_save("gapminder.gif", animate(anim, width = 800, height = 500))
+```
+
+<!-- insert your prepared animation here: -->
+<!-- ![](gapminder.gif) -->
+
+
+# Wrap-up
+
+## What you can do now
+
+::: {.fragment}
+- Read, clean, transform, and combine data
+- Look at it with plots
+- Put it all in a document that renders from top to bottom
+:::
+
+::: {.fragment}
+### Some good resources
+
+* "From data to viz" - [https://www.data-to-viz.com/](https://www.data-to-viz.com/)
+
+* The R graph gallery - [https://r-graph-gallery.com/](https://r-graph-gallery.com/)
+
+* Actually, many good resources out there!
+  - I'm a fanboy - check out the work of Nadieh Bremer, Nicola Rennie, Nathan Yau, Tamara Münzner, ...
+:::
+
+
+# What comes next?
+
+Ask me anything!
+
+**Questions** on this, or on any of the previous chapters?
+
+**Thank you for your attention!**
+
