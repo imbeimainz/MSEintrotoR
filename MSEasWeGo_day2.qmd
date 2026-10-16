@@ -1,0 +1,492 @@
+---
+title: "MSE as we go - day2"
+author: "Federico as a student!"
+format: 
+  html:
+    toc: true
+    number-sections: true
+    embed-resources: true
+editor_options: 
+  chunk_output_type: inline
+---
+
+# Loading in the packages we will need
+
+```{r}
+library("dplyr")
+library("janitor")
+library("NHANES")
+library("readxl")
+library("writexl")
+library("haven")
+
+# install.packages("NHANES")
+```
+
+# Chapter 4
+
+## Our first look at the data!
+
+
+```{r}
+NHANES
+
+NHANES |>
+  filter(Age >= 18)
+
+NHANES |>
+  filter(Age >= 18) |>                       # rows
+  mutate(obese = BMI >= 30) 
+
+
+NHANES |>
+  filter(Age >= 18) |>                       # rows
+  mutate(obese = BMI >= 30) |>               # columns
+  group_by(Sex) 
+
+NHANES |>
+  filter(Age >= 18) |>                       # rows
+  mutate(obese = BMI >= 30) |>               # columns
+  group_by(Sex) |>                           # groups
+  summarise(prop_obese = mean(obese, na.rm = TRUE))
+```
+
+## The ingredients for our guiding question
+
+* Diabetes
+* BMI
+* HbA1c values
+
+maybe on top of that:
+
+* Sex
+* Age
+* you name it...
+
+
+```{r}
+NHANES$Diabetes
+
+NHANES$BMI
+
+mean(NHANES$BMI, na.rm = TRUE)
+median(NHANES$BMI)
+median(NHANES$BMI, na.rm = TRUE)
+
+
+summary(NHANES)
+summary(NHANES$BMI)
+
+
+table(NHANES$Diabetes, useNA = "always")
+
+
+```
+
+Inside the help man pages, you can also search for content - no need to get mad and crazy searching for a bit of info!
+
+```{r}
+?NHANES
+```
+
+## Read, view, access
+
+```{r}
+library("NHANES")
+data("NHANES")
+
+library("dplyr")
+
+dplyr::glimpse(NHANES)
+
+head(NHANES)
+
+NHANESraw
+
+
+nh <- select(NHANES, ID, SurveyYr, Sex, Age, BMI, Diabetes, BPSys1, BPDia1, Smoke100)
+nh
+```
+
+```{r}
+write_xlsx(nh, "datasets/nhanes_small.xlsx")
+file.exists("datasets/nhanes_small.xlsx")
+
+nh_xl <- read_excel("datasets/nhanes_small.xlsx")
+identical(nh, nh_xl)    
+# all.equal(nh, nh_xl)
+glimpse(nh)
+glimpse(nh_xl)            
+
+
+saveRDS(nh, file = "datasets/nhanes_but_as_Robject.RDS")
+nh_r <- readRDS("datasets/nhanes_but_as_Robject.RDS")
+
+identical(nh, nh_r)
+```
+
+
+
+
+```{r}
+colSums(is.na(nh))
+
+nh |> summarise(across(everything(), n_distinct))
+
+nh$ID |> unique() |> length()
+
+
+
+```
+
+## Subsetting
+
+```{r}
+nh |> select(Age, BMI)
+nh |> select(-SurveyYr)
+nh |> select(starts_with("BP"))
+nh |> select(ID, starts_with("BP"))
+nh |> select(ID, starts_with("BP"), BMI)
+```
+
+
+```{r}
+nh |> filter(Age >= 18)
+nh |> filter(Age >= 18, Sex == "female")
+nh |> filter(Smoke100 == "Yes" | Diabetes == "Yes")
+nh |> filter(SurveyYr %in% c("2009_10", "2011_12"))
+nh |> filter(SurveyYr %in% c("2011_12"))
+nh |> filter(SurveyYr =="2011_12")
+```
+
+
+```{r}
+nrow(nh)
+
+nrow(filter(nh, BMI > 30))
+nrow(filter(nh, BMI <= 30))
+
+2751 + 6883
+
+sum(is.na(nh$BMI))
+```
+
+## Handling duplicates
+
+```{r}
+nrow(nh)
+head(nh)
+
+n_distinct(nh$ID)
+length(unique(nh$ID))
+
+nh |> count(ID) |> filter(n > 1)
+
+nh |> count(ID)
+
+library("janitor")
+nh |> get_dupes(ID)
+
+
+
+
+nh_u <- nh |> 
+  distinct(ID, .keep_all = TRUE)
+
+nh_u
+
+
+```
+
+
+## Sorting 
+
+```{r}
+nh_u |> 
+  arrange(Sex, desc(Age))
+
+hist(nh_u$Age, breaks = 20)
+```
+
+```{r}
+nh_u |> 
+  relocate(BMI, .after = ID)
+
+sort(names(nh_u))
+
+nh_u[, sort(names(nh_u))] |> 
+  select(ID, Age, Sex, everything())
+
+nh_u
+```
+
+## Transforming
+
+```{r}
+nh_u <- nh_u |> 
+  rename(sex = Sex, survey_year = SurveyYr)  
+```
+
+
+
+```{r}
+nh_u <- nh_u |> 
+  mutate(
+    bmi_class = case_when(
+      BMI < 18.5 ~ "underweight",
+      BMI < 25 ~"normal",
+      BMI < 30 ~"overweight",
+      BMI >= 30 ~"obese"
+    ),
+    age_group = cut(Age, breaks = c(0,18,40, 60, Inf), right =FALSE)
+  )
+
+head(nh_u)
+
+
+count(nh_u, bmi_class)
+table(nh_u$bmi_class)
+```
+
+```{r}
+552/nrow(nh_u)
+552/(nrow(nh_u) - sum(is.na(nh_u$Diabetes)))
+```
+
+
+
+
+
+
+
+
+## Group-by
+
+
+### Here's our answer!!!!
+
+
+```{r}
+nh_u |> 
+  group_by(bmi_class) |> 
+  summarise(
+    n = n(),
+    prop_diabetic = mean(Diabetes == "Yes", na.rm = TRUE) * 100,
+    nr_diabetic = sum(Diabetes == "Yes", na.rm = TRUE)
+  )
+```
+
+What about doing it for the EARLY entries, and for the LATE entries, separately?
+
+```{r}
+# one way to do that
+nh_u |> 
+  filter(survey_year == "2011_12") |> 
+  group_by(bmi_class) |> 
+  summarise(
+    n = n(),
+    prop_diabetic = mean(Diabetes == "Yes", na.rm = TRUE) * 100,
+    nr_diabetic = sum(Diabetes == "Yes", na.rm = TRUE)
+  )
+
+
+# another way to do that
+library("ggplot2")
+
+nh_u |> 
+  group_by(bmi_class, survey_year) |> 
+  summarise(
+    n = n(),
+    prop_diabetic = mean(Diabetes == "Yes", na.rm = TRUE) * 100,
+    nr_diabetic = sum(Diabetes == "Yes", na.rm = TRUE)
+  )
+  
+nh_u |> 
+  group_by(bmi_class, survey_year) |> 
+  summarise(
+    n = n(),
+    prop_diabetic = mean(Diabetes == "Yes", na.rm = TRUE) * 100,
+    nr_diabetic = sum(Diabetes == "Yes", na.rm = TRUE)
+  ) |> 
+  ggplot(aes(x = bmi_class, y = prop_diabetic, col = survey_year)) + geom_point()+ theme_bw()
+
+```
+
+
+
+
+
+## Combining
+
+```{r}
+ghb_f <- haven::read_xpt("datasets/GHB_F.XPT")    # 2009-10
+ghb_g <- haven::read_xpt("datasets/GHB_G.XPT")    # 2011-12
+
+glimpse(ghb_f)
+glimpse(ghb_g)
+
+ghb <- bind_rows(ghb_f, ghb_g)
+
+ghb
+
+
+nh_ghb <- nh_u |> 
+  left_join(ghb, by = join_by(ID == SEQN))
+
+head(nh_ghb)
+
+nh_ghb |>
+  group_by(Diabetes) |>
+  summarise(n = n(), mean_hba1c = mean(LBXGH, na.rm = TRUE))
+
+library("ggplot2")
+ggplot(nh_ghb,
+       aes(x = Diabetes, y = LBXGH)) + geom_jitter()
+
+```
+
+
+
+
+## Saving
+
+# Chapter 5
+
+Left as optional for self-study or to be reprised in a later session!
+
+
+# Chapter 6 
+
+## Data visualization!
+
+```{r}
+library("dplyr")
+library("tidyr")
+library("gapminder")
+library("ggplot2")
+library("ggforce")
+
+# checkpoint from chapter 4, with the factor order from chapter 5
+nh <- readRDS("datasets/nhanes_ghb.RDS") |>
+  mutate(bmi_class = factor(bmi_class,
+                            levels = c("underweight", "normal", "overweight", "obese")))
+
+# nh <- nh_ghb
+
+nh
+```
+
+
+```{r}
+ggplot(nh)
+
+ggplot(nh, aes(x = Age, y = BMI))
+
+ggplot(nh, aes(x = Age, y = BMI)) + geom_point()
+ggplot(nh, aes(x = Age, y = BMI)) + geom_point(alpha = 0.3)
+ggplot(nh, aes(x = Age, y = BMI, col = Smoke100)) + geom_point(alpha = 0.3)
+
+colnames(nh)
+
+ggplot(nh, aes(x = bmi_class, y = LBXGH)) + geom_point()
+ggplot(nh, aes(x = bmi_class, y = LBXGH)) + geom_jitter()
+ggplot(nh, aes(x = bmi_class, y = LBXGH)) + geom_boxplot()
+ggplot(nh, aes(x = bmi_class, y = LBXGH)) + ggforce::geom_sina()
+ggplot(nh, aes(x = bmi_class, y = LBXGH)) + geom_violin()
+ggplot(nh, aes(x = bmi_class, y = LBXGH)) + ggforce::geom_sina(alpha = 0.3)
+
+```
+
+```{r}
+ggplot(nh, aes(x = BMI)) +
+  geom_histogram(bins = 30) + theme_void()
+
+ggplot(nh, aes(x = BMI)) +
+  geom_histogram(binwidth = 2)            
+```
+
+
+
+```{r}
+ggplot(nh, aes(x = Age, y = BMI, colour = sex)) +
+  geom_point(alpha = 0.3)
+
+ggplot(nh, aes(x = Age, y = BMI)) +
+  geom_point(colour = "steelblue", alpha = 0.3)
+```
+
+
+```{r}
+library("ggforce")
+
+nh |>
+  filter(Age >= 18) |>
+  drop_na(BPSys1, Smoke100) |>
+  ggplot(aes(x = Smoke100, y = BPSys1, col = sex)) +
+  geom_sina() +
+  facet_wrap(~ age_group)
+```
+
+
+```{r}
+nh |>
+  group_by(bmi_class) |>
+  summarise(prevalence = mean(Diabetes == "Yes", na.rm = TRUE)) |>
+  ggplot(aes(x = bmi_class, y = prevalence)) +
+  geom_col() +
+  labs(x = "BMI class", y = "Diabetes prevalence")
+```
+
+
+```{r}
+nh |>
+  drop_na(bmi_class, Diabetes, age_group) |>
+  group_by(age_group, bmi_class) |>
+  summarise(prevalence = mean(Diabetes == "Yes"), .groups = "drop") |>
+  ggplot(aes(x = bmi_class, y = prevalence, fill = age_group)) +
+  geom_col(position = "dodge")
+
+nh |>
+  drop_na(bmi_class, Diabetes, age_group) |>
+  group_by(age_group, bmi_class) |>
+  summarise(prevalence = mean(Diabetes == "Yes"), .groups = "drop") |>
+  ggplot(aes(x = age_group, y = prevalence, fill = bmi_class)) +
+  geom_col(position = "dodge")
+```
+
+
+## Gapminder!!!
+
+```{r}
+library("gapminder")
+data("gapminder")
+
+gapminder |>
+  filter(year == 2007) |>
+  ggplot(aes(x = gdpPercap, y = lifeExp, col = continent )) +
+  geom_point()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+# Session info
+
+```{r}
+sessionInfo()
+```
+
+
+
+
+
+
+
