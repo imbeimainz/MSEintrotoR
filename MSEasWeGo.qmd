@@ -324,6 +324,54 @@ names(penguins)
 
 
 
+## Day2 but it is Day1
+
+```{r}
+#| error: true
+ 
+penguins_raw
+
+my_penguins <- penguins_raw
+
+my_penguins$body_mass_kg <- my_penguins$`Body Mass (g)`/1000
+hist(my_penguins$body_mass_kg)
+
+my_penguins$Body Mass (g)
+
+summary(my_penguins)
+
+my_penguins$z_bodymass <- scale(my_penguins$body_mass_kg)
+
+head(my_penguins$z_bodymass)
+hist(my_penguins$z_bodymass, breaks = 20)
+hist(my_penguins$body_mass_kg, breaks = 20)
+
+my_penguins$mass_class <- cut(my_penguins$body_mass_kg, breaks = 3)
+table(my_penguins$mass_class)
+?cut
+
+cut(my_penguins$body_mass_kg, breaks = 4)
+
+janitor::clean_names(my_penguins)
+
+my_penguins$`Body Mass (g)`
+
+head(my_penguins)
+
+
+my_penguins$Comments
+
+my_penguins$my_comments <- c(1,2)
+my_penguins$my_comments <- c(1,2,3,4,5,6,7,8,9,0)
+
+my_penguins$my_comments_v2 <- c(1,2,3,4)
+
+my_penguins$my_comments_v2 <- NULL
+
+```
+
+
+
 # The gran finale
 
 ```{r}
